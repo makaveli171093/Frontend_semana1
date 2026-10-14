@@ -1,41 +1,32 @@
-# Clínica Salud Integral — Frontend
+# React + TypeScript + Vite
 
-Proyecto desarrollado con React, TypeScript, Vite y Tailwind CSS.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Semana 1 — Día 1: Dashboard con MetricCards
+Currently, two official plugins are available:
 
-### Funcionalidades
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- Dashboard con cuatro métricas.
-- Componente reutilizable MetricCard.
-- Componente StatusBadge.
-- Indicador de sistema operativo o mantenimiento.
-- Botones para incrementar y disminuir pacientes.
-- Actualización de la interfaz mediante useState.
-- Diseño responsive con Tailwind CSS.
+## React Compiler
 
-### Tecnologías
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
+## Expanding the Oxlint configuration
 
-### Instalación
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
 
-```bash
-npm install
-npm run dev
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
 ```
 
-### Verificación
-
-```bash
-npm run build
-```
-
-### Estructura principal
-
-- `src/types/`: Interfaces y tipos TypeScript.
-- `src/components/`: Componentes reutilizables.
-- `src/pages/`: Páginas de la aplicación.
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
