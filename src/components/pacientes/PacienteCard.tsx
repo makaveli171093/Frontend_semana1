@@ -1,11 +1,17 @@
-import type { Paciente } from "../../types/paciente";
+import type { Paciente, EstadoPaciente } from "../../types/paciente";
 import { BadgeEstado } from "./BadgeEstado";
 
 interface PacienteCardProps {
   paciente: Paciente;
+  onCambiarEstado: (id: string, estado: EstadoPaciente) => void;
+  onEliminar: (id: string) => void;
 }
 
-export function PacienteCard({ paciente }: PacienteCardProps) {
+export function PacienteCard({
+  paciente,
+  onCambiarEstado,
+  onEliminar,
+}: PacienteCardProps) {
   const nombreCompleto = `${paciente.nombre} ${paciente.apellido}`;
 
   const iniciales = paciente.nombre.charAt(0) + paciente.apellido.charAt(0);
@@ -58,9 +64,29 @@ export function PacienteCard({ paciente }: PacienteCardProps) {
       </div>
 
       <div className="mt-5 border-t border-slate-100 pt-4">
-        <span className="block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-cyan-800">
-          Ver detalle →
-        </span>
+        <label className="mb-2 block text-sm text-slate-600">
+          Cambiar estado
+        </label>
+
+        <select
+          value={paciente.estado}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            onCambiarEstado(paciente.id, e.target.value as EstadoPaciente)
+          }
+          className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm"
+        >
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="en_espera">En espera</option>
+        </select>
+
+        <button
+          type="button"
+          onClick={() => onEliminar(paciente.id)}
+          className="mt-3 w-full rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-700 hover:bg-red-50"
+        >
+          Eliminar paciente
+        </button>
       </div>
     </article>
   );
