@@ -1,11 +1,17 @@
-import type { Paciente } from "../../types/paciente";
+import type { Paciente, EstadoPaciente } from "../../types/paciente";
 import { BadgeEstado } from "./BadgeEstado";
 
 interface PacienteRowProps {
   paciente: Paciente;
+  onCambiarEstado: (id: string, estado: EstadoPaciente) => void;
+  onEliminar: (id: string) => void;
 }
 
-export function PacienteRow({ paciente }: PacienteRowProps) {
+export function PacienteRow({
+  paciente,
+  onCambiarEstado,
+  onEliminar,
+}: PacienteRowProps) {
   const iniciales = paciente.nombre.charAt(0) + paciente.apellido.charAt(0);
 
   const nombreCompleto = `${paciente.nombre} ${paciente.apellido}`;
@@ -47,15 +53,35 @@ export function PacienteRow({ paciente }: PacienteRowProps) {
       <td className="px-5 py-4 text-sm text-slate-500">{fechaFormateada}</td>
 
       {/* Estado */}
+
       <td className="px-5 py-4">
-        <BadgeEstado estado={paciente.estado} />
+        <div className="flex flex-col items-start gap-2">
+          <BadgeEstado estado={paciente.estado} />
+
+          <select
+            value={paciente.estado}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              onCambiarEstado(paciente.id, e.target.value as EstadoPaciente)
+            }
+            aria-label={`Cambiar estado de ${nombreCompleto}`}
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+          >
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="en_espera">En espera</option>
+          </select>
+        </div>
       </td>
 
       {/* Acciones: se implementarán más adelante */}
       <td className="px-5 py-4 text-right">
-        <span className="inline-block rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-cyan-800">
-          Ver detalle →
-        </span>
+        <button
+          type="button"
+          onClick={() => onEliminar(paciente.id)}
+          className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50"
+        >
+          Eliminar
+        </button>
       </td>
     </tr>
   );
