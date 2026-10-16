@@ -1,9 +1,12 @@
 import { useState } from "react";
 import PaginaDashboard from "./pages/PaginaDashboard";
 import { PaginaPacientes } from "./pages/PaginaPacientes";
+import { PaginaNuevaCita } from "./pages/PaginaNuevaCita";
 
 function App() {
-  const [pagina, setPagina] = useState<"dashboard" | "pacientes">("dashboard");
+  const [pagina, setPagina] = useState<"dashboard" | "pacientes" | "citas">(
+    "dashboard",
+  );
 
   return (
     <div>
@@ -32,10 +35,28 @@ function App() {
         >
           Pacientes
         </button>
+
+        <button
+          type="button"
+          onClick={() => setPagina("citas")}
+          className={`rounded-lg px-4 py-2 font-medium ${
+            pagina === "citas"
+              ? "bg-cyan-800 text-white"
+              : "bg-slate-100 text-slate-700"
+          }`}
+        >
+          Nueva cita
+        </button>
       </nav>
 
       {/* Renderizado condicional */}
-      {pagina === "dashboard" ? <PaginaDashboard /> : <PaginaPacientes />}
+      {pagina === "dashboard" ? (
+        <PaginaDashboard />
+      ) : pagina === "pacientes" ? (
+        <PaginaPacientes />
+      ) : (
+        <PaginaNuevaCita />
+      )}
     </div>
   );
 }
