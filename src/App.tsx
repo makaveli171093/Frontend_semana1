@@ -2,13 +2,16 @@ import PaginaDashboard from "./pages/PaginaDashboard";
 import { PaginaPacientes } from "./pages/PaginaPacientes";
 import { PaginaNuevaCita } from "./pages/PaginaNuevaCita";
 import { Route, Routes } from "react-router-dom";
+import { Layout } from "./layouts/Layout";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<PaginaDashboard />} />
-      <Route path="/pacientes" element={<PaginaPacientes />} />
-      <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<PaginaDashboard />} />
+        <Route path="/pacientes" element={<PaginaPacientes />} />
+        <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
+      </Route>
     </Routes>
   );
 }
