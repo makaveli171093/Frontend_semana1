@@ -1,5 +1,6 @@
 import type { Paciente, EstadoPaciente } from "../../types/paciente";
 import { BadgeEstado } from "./BadgeEstado";
+import { Link } from "react-router-dom";
 
 interface PacienteRowProps {
   paciente: Paciente;
@@ -82,6 +83,12 @@ export function PacienteRow({
         >
           Eliminar
         </button>
+        <Link
+          to={`/pacientes/${paciente.id}`}
+          className="mr-2 inline-block rounded-lg border border-cyan-200 px-3 py-2 text-xs font-medium text-cyan-800 hover:bg-cyan-50"
+        >
+          Ver detalle →
+        </Link>
       </td>
     </tr>
   );

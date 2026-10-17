@@ -1,6 +1,8 @@
 import { FormularioCita } from "../components/citas/FormularioCita";
+import { useNavigate } from "react-router-dom";
 
 export function PaginaNuevaCita() {
+  const navigate = useNavigate();
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-3xl">
@@ -15,7 +17,13 @@ export function PaginaNuevaCita() {
 
           <p className="mt-2 text-slate-500">Programa una atención médica.</p>
         </header>
-
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-6 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+        >
+          ← Cancelar y volver
+        </button>
         <FormularioCita />
       </div>
     </main>
