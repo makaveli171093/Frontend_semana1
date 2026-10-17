@@ -2,6 +2,7 @@ import { useState } from "react";
 import MetricCard from "../components/MetricCard";
 import StatusBadge from "../components/StatusBadge";
 import type { Metrica } from "../types";
+import { Link } from "react-router-dom";
 
 function PaginaDashboard() {
   const [pacientes, setPacientes] = useState<number>(128);
@@ -64,6 +65,12 @@ function PaginaDashboard() {
 
           <StatusBadge activo={!mantenimiento} />
         </div>
+        <Link
+          to="/pacientes"
+          className="inline-block rounded-lg bg-cyan-800 px-5 py-3 text-sm font-semibold text-white hover:bg-cyan-900"
+        >
+          Ver Pacientes →
+        </Link>
 
         {/* Banner de mantenimiento */}
         {mantenimiento && (

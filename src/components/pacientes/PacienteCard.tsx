@@ -1,5 +1,6 @@
 import type { Paciente, EstadoPaciente } from "../../types/paciente";
 import { BadgeEstado } from "./BadgeEstado";
+import { Link } from "react-router-dom";
 
 interface PacienteCardProps {
   paciente: Paciente;
@@ -87,6 +88,12 @@ export function PacienteCard({
         >
           Eliminar paciente
         </button>
+        <Link
+          to={`/pacientes/${paciente.id}`}
+          className="mb-3 block rounded-lg border border-cyan-200 px-4 py-3 text-center text-sm font-medium text-cyan-800 hover:bg-cyan-50"
+        >
+          Ver detalle →
+        </Link>
       </div>
     </article>
   );
