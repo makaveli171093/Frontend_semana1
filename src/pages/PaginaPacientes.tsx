@@ -165,46 +165,53 @@ export function PaginaPacientes() {
           </div>
         )}
 
-        <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              Listado de pacientes
-            </h2>
+        {!cargando && !error && (
+          <>
+            {/* Controles de búsqueda y filtros */}
+            {/* Tabla de pacientes */}
+            {/* Tarjetas móviles */}
+            <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Listado de pacientes
+                </h2>
 
-            <p className="text-sm text-slate-500">
-              {pacientesFiltrados.length} paciente(s) encontrado(s)
-            </p>
-          </div>
+                <p className="text-sm text-slate-500">
+                  {pacientesFiltrados.length} paciente(s) encontrado(s)
+                </p>
+              </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <BuscadorPacientes value={busqueda} onChange={setBusqueda} />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <BuscadorPacientes value={busqueda} onChange={setBusqueda} />
 
-            <select
-              value={estadoFiltro}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setEstadoFiltro(e.target.value as EstadoPaciente | "Todos")
-              }
-              aria-label="Filtrar por estado"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-cyan-600"
-            >
-              <option value="Todos">Todos los estados</option>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-              <option value="en_espera">En espera</option>
-            </select>
+                <select
+                  value={estadoFiltro}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setEstadoFiltro(e.target.value as EstadoPaciente | "Todos")
+                  }
+                  aria-label="Filtrar por estado"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-cyan-600"
+                >
+                  <option value="Todos">Todos los estados</option>
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="en_espera">En espera</option>
+                </select>
 
-            <button
-              type="button"
-              onClick={() => {
-                setBusqueda("");
-                setEstadoFiltro("Todos");
-              }}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Limpiar filtros
-            </button>
-          </div>
-        </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBusqueda("");
+                    setEstadoFiltro("Todos");
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Vista de escritorio */}
         <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
