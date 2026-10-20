@@ -1,12 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MetricCard from "../components/MetricCard";
 import StatusBadge from "../components/StatusBadge";
 import type { Metrica } from "../types";
 import { Link } from "react-router-dom";
+import { api } from "../lib/axios";
+import axios from "axios";
+
+interface EstadisticasCitas {
+  programadas: number;
+  completadas: number;
+}
 
 function PaginaDashboard() {
   const [pacientes, setPacientes] = useState<number>(128);
   const [mantenimiento, setMantenimiento] = useState<boolean>(false);
+  const [totalPacientes, setTotalPacientes] = useState<number | null>(null);
+  const [cargandoPacientes, setCargandoPacientes] = useState(true);
+  const [errorPacientes, setErrorPacientes] = useState(false);
+  const [totalMedicos, setTotalMedicos] = useState<number | null>(null);
+  const [cargandoMedicos, setCargandoMedicos] = useState(true);
+  const [errorMedicos, setErrorMedicos] = useState(false);
+  const [estadisticasCitas, setEstadisticasCitas] =
+    useState<EstadisticasCitas | null>(null);
+
+  const [cargandoCitas, setCargandoCitas] = useState(true);
+  const [errorCitas, setErrorCitas] = useState(false);
 
   const incrementarPacientes = () => {
     setPacientes((anterior) => anterior + 1);
@@ -16,40 +34,161 @@ function PaginaDashboard() {
     setPacientes((anterior) => Math.max(0, anterior - 1));
   };
 
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    api
+      .get<EstadisticasCitas>("/reports/appointment-stats", {
+        signal: controlador.signal,
+      })
+      .then((respuesta) => {
+        setEstadisticasCitas(respuesta.data);
+        setErrorCitas(false);
+      })
+      .catch((error: unknown) => {
+        if (!axios.isCancel(error)) {
+          setErrorCitas(true);
+        }
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) {
+          setCargandoCitas(false);
+        }
+      });
+
+    return () => controlador.abort();
+  }, []);
+
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    api
+      .get<unknown[]>("/patients", {
+        signal: controlador.signal,
+      })
+      .then((respuesta) => {
+        setTotalPacientes(respuesta.data.length);
+        setErrorPacientes(false);
+      })
+      .catch((error: unknown) => {
+        if (!axios.isCancel(error)) {
+          setErrorPacientes(true);
+        }
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) {
+          setCargandoPacientes(false);
+        }
+      });
+
+    return () => controlador.abort();
+  }, []);
+
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    api
+      .get<unknown[]>("/doctors", {
+        signal: controlador.signal,
+      })
+      .then((respuesta) => {
+        if (!Array.isArray(respuesta.data)) {
+          throw new Error("La API no devolvió un arreglo de médicos");
+        }
+
+        setTotalMedicos(respuesta.data.length);
+        setErrorMedicos(false);
+      })
+      .catch((error: unknown) => {
+        if (!axios.isCancel(error)) {
+          setErrorMedicos(true);
+        }
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) {
+          setCargandoMedicos(false);
+        }
+      });
+
+    return () => controlador.abort();
+  }, []);
+
   const metricas: Metrica[] = [
     {
       id: "pacientes",
       titulo: "Pacientes",
-      valor: pacientes,
-      descripcion: "+12 pacientes este mes",
-      tendencia: "positiva",
+      valor: cargandoPacientes
+        ? "Cargando..."
+        : errorPacientes
+          ? "Error"
+          : (totalPacientes ?? 0),
+      descripcion: "Total registrado en PostgreSQL",
+      tendencia: "neutra",
       icono: "👥",
     },
     {
       id: "citas",
-      titulo: "Citas Hoy",
-      valor: 24,
-      descripcion: "Agenda del día",
+      titulo: "Citas Programadas",
+      valor: cargandoCitas
+        ? "Cargando..."
+        : errorCitas
+          ? "Error"
+          : (estadisticasCitas?.programadas ?? 0),
+      descripcion: "Citas programadas en PostgreSQL",
       tendencia: "neutra",
       icono: "📅",
     },
     {
-      id: "pendientes",
-      titulo: "Consultas Pendientes",
-      valor: 8,
-      descripcion: "Requieren atención",
-      tendencia: "negativa",
-      icono: "⏳",
+      id: "completadas",
+      titulo: "Citas Completadas",
+      valor: cargandoCitas
+        ? "Cargando..."
+        : errorCitas
+          ? "Error"
+          : (estadisticasCitas?.completadas ?? 0),
+      descripcion: "Total histórico de citas completadas",
+      tendencia: "neutra",
+      icono: "✅",
     },
     {
-      id: "disponibilidad",
-      titulo: "Disponibilidad",
-      valor: "85%",
-      descripcion: "Capacidad operativa",
-      tendencia: "positiva",
-      icono: "📈",
+      id: "medicos",
+      titulo: "Médicos",
+      valor: cargandoMedicos
+        ? "Cargando..."
+        : errorMedicos
+          ? "Error"
+          : (totalMedicos ?? 0),
+      descripcion: "Médicos registrados en PostgreSQL",
+      tendencia: "neutra",
+      icono: "🩺",
     },
   ];
+
+  useEffect(() => {
+    let activo = true;
+
+    api
+      .get<unknown[]>("/patients")
+      .then((respuesta) => {
+        if (activo) {
+          setTotalPacientes(respuesta.data.length);
+        }
+      })
+      .catch(() => {
+        if (activo) {
+          setErrorPacientes(true);
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargandoPacientes(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
