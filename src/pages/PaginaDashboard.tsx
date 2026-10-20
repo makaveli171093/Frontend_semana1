@@ -164,32 +164,6 @@ function PaginaDashboard() {
     },
   ];
 
-  useEffect(() => {
-    let activo = true;
-
-    api
-      .get<unknown[]>("/patients")
-      .then((respuesta) => {
-        if (activo) {
-          setTotalPacientes(respuesta.data.length);
-        }
-      })
-      .catch(() => {
-        if (activo) {
-          setErrorPacientes(true);
-        }
-      })
-      .finally(() => {
-        if (activo) {
-          setCargandoPacientes(false);
-        }
-      });
-
-    return () => {
-      activo = false;
-    };
-  }, []);
-
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
