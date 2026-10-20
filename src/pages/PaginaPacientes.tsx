@@ -8,10 +8,9 @@
  * Adaptación: componentes React + TypeScript + Tailwind CSS.
  */
 
-import { pacientesIniciales } from "../data/pacientes";
 import { PacienteRow } from "../components/pacientes/PacienteRow";
 import { PacienteCard } from "../components/pacientes/PacienteCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BuscadorPacientes } from "../components/pacientes/BuscadorPacientes";
 import { ResumenPacientes } from "../components/pacientes/ResumenPacientes";
 import type { Paciente, EstadoPaciente } from "../types/paciente";
@@ -19,9 +18,27 @@ import {
   FormularioPaciente,
   type DatosNuevoPaciente,
 } from "../components/pacientes/FormularioPaciente";
+import axios from "axios";
+import { api } from "../lib/axios";
+import type { PacienteApi } from "../types/pacientesApi";
+
+function adaptarPaciente(registro: PacienteApi): Paciente {
+  return {
+    id: String(registro.id),
+    nombre: registro.firstName,
+    apellido: registro.lastName,
+    email: registro.email,
+    telefono: registro.phone,
+    especialidadAsignada: "Sin asignar",
+    ultimaCita: "Sin información",
+    estado: registro.isActive ? "activo" : "inactivo",
+  };
+}
 
 export function PaginaPacientes() {
-  const [pacientes, setPacientes] = useState<Paciente[]>(pacientesIniciales);
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
 
   const [busqueda, setBusqueda] = useState<string>("");
 
@@ -39,6 +56,29 @@ export function PaginaPacientes() {
 
     return coincideNombre && coincideEstado;
   });
+
+  const cargarPacientes = async () => {
+    setCargando(true);
+    setError(false);
+
+    try {
+      const respuesta = await api.get<PacienteApi[]>("/patients");
+
+      if (!Array.isArray(respuesta.data)) {
+        throw new Error("Formato de pacientes inválido");
+      }
+
+      const pacientesAdaptados = respuesta.data.map(adaptarPaciente);
+
+      setPacientes(pacientesAdaptados);
+    } catch (error: unknown) {
+      if (!axios.isCancel(error)) {
+        setError(true);
+      }
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const agregarPaciente = (datos: DatosNuevoPaciente) => {
     const nuevoPaciente: Paciente = {
@@ -73,6 +113,10 @@ export function PaginaPacientes() {
     setPacientes((prev) => prev.filter((paciente) => paciente.id !== id));
   };
 
+  useEffect(() => {
+    void cargarPacientes();
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <FormularioPaciente onAgregar={agregarPaciente} />
@@ -92,6 +136,34 @@ export function PaginaPacientes() {
             Consulta y administración de pacientes registrados.
           </p>
         </header>
+        {cargando && (
+          <div
+            role="status"
+            className="rounded-xl border border-slate-200 bg-white p-6 text-center"
+          >
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-700" />
+            <p className="text-slate-600">Cargando pacientes...</p>
+          </div>
+        )}
+
+        {error && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 p-6 text-center"
+          >
+            <p className="mb-4 text-red-700">
+              No se pudieron obtener los pacientes.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => void cargarPacientes()}
+              className="rounded-lg bg-red-700 px-5 py-2 text-white hover:bg-red-800"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
 
         <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
