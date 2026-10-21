@@ -1,60 +1,55 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-import type { EstadoPaciente } from "../../types/paciente";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-export interface DatosNuevoPaciente {
-  nombre: string;
-  apellido: string;
-  email: string;
-  estado: EstadoPaciente;
-}
+import {
+  pacienteSchema,
+  type DatosNuevoPaciente,
+} from "../../schemas/paciente.schema";
+
+export type { DatosNuevoPaciente } from "../../schemas/paciente.schema";
 
 interface FormularioPacienteProps {
-  onAgregar: (datos: DatosNuevoPaciente) => void;
+  onAgregar: (datos: DatosNuevoPaciente) => Promise<void>;
+  guardando: boolean;
 }
 
-const formularioInicial: DatosNuevoPaciente = {
-  nombre: "",
-  apellido: "",
-  email: "",
-  estado: "activo",
-};
+export function FormularioPaciente({
+  onAgregar,
+  guardando,
+}: FormularioPacienteProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DatosNuevoPaciente>({
+    resolver: zodResolver(pacienteSchema),
+    defaultValues: {
+      nombre: "",
+      apellido: "",
+      email: "",
+      telefono: "",
+      genero: "MASCULINO",
+      fechaNacimiento: "",
+    },
+  });
 
-export function FormularioPaciente({ onAgregar }: FormularioPacienteProps) {
-  const [formulario, setFormulario] =
-    useState<DatosNuevoPaciente>(formularioInicial);
-
-  const [error, setError] = useState("");
-
-  const actualizarCampo = (campo: keyof DatosNuevoPaciente, valor: string) => {
-    setFormulario((prev) => ({
-      ...prev,
-      [campo]: valor,
-    }));
-  };
-
-  const manejarSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!formulario.nombre.trim() || !formulario.email.trim()) {
-      setError("El nombre y el correo son obligatorios.");
-      return;
+  const enviar = async (datos: DatosNuevoPaciente) => {
+    try {
+      await onAgregar(datos);
+      reset();
+    } catch {
+      // El componente padre ya muestra el mensaje de error.
+      // Conservamos los campos para que el usuario los corrija.
     }
-
-    onAgregar({
-      ...formulario,
-      nombre: formulario.nombre.trim(),
-      apellido: formulario.apellido.trim(),
-      email: formulario.email.trim(),
-    });
-
-    setFormulario({ ...formularioInicial });
-    setError("");
   };
+
+  const claseInput =
+    "rounded-lg border border-slate-200 p-3 outline-none focus:border-cyan-600";
 
   return (
     <form
-      onSubmit={manejarSubmit}
+      onSubmit={handleSubmit(enviar)}
       className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
     >
       <h2 className="mb-5 text-lg font-semibold text-slate-900">
@@ -65,61 +60,87 @@ export function FormularioPaciente({ onAgregar }: FormularioPacienteProps) {
         <label className="flex flex-col gap-2 text-sm text-slate-700">
           Nombre *
           <input
-            type="text"
-            value={formulario.nombre}
-            onChange={(e) => actualizarCampo("nombre", e.target.value)}
-            className="rounded-lg border border-slate-200 p-3 outline-none focus:border-cyan-600"
+            {...register("nombre")}
+            className={claseInput}
             placeholder="Nombre"
           />
+          {errors.nombre && (
+            <span className="text-red-600">{errors.nombre.message}</span>
+          )}
         </label>
 
         <label className="flex flex-col gap-2 text-sm text-slate-700">
-          Apellido
+          Apellido *
           <input
-            type="text"
-            value={formulario.apellido}
-            onChange={(e) => actualizarCampo("apellido", e.target.value)}
-            className="rounded-lg border border-slate-200 p-3 outline-none focus:border-cyan-600"
+            {...register("apellido")}
+            className={claseInput}
             placeholder="Apellido"
           />
+          {errors.apellido && (
+            <span className="text-red-600">{errors.apellido.message}</span>
+          )}
         </label>
 
         <label className="flex flex-col gap-2 text-sm text-slate-700">
           Correo electrónico *
           <input
             type="email"
-            value={formulario.email}
-            onChange={(e) => actualizarCampo("email", e.target.value)}
-            className="rounded-lg border border-slate-200 p-3 outline-none focus:border-cyan-600"
+            {...register("email")}
+            className={claseInput}
             placeholder="paciente@correo.com"
           />
+          {errors.email && (
+            <span className="text-red-600">{errors.email.message}</span>
+          )}
         </label>
 
         <label className="flex flex-col gap-2 text-sm text-slate-700">
-          Estado
-          <select
-            value={formulario.estado}
-            onChange={(e) => actualizarCampo("estado", e.target.value)}
-            className="rounded-lg border border-slate-200 p-3 outline-none focus:border-cyan-600"
-          >
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-            <option value="en_espera">En espera</option>
+          Teléfono *
+          <input
+            type="tel"
+            {...register("telefono")}
+            className={claseInput}
+            placeholder="78945612"
+          />
+          {errors.telefono && (
+            <span className="text-red-600">{errors.telefono.message}</span>
+          )}
+        </label>
+
+        <label className="flex flex-col gap-2 text-sm text-slate-700">
+          Género *
+          <select {...register("genero")} className={claseInput}>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMENINO">Femenino</option>
+            <option value="OTRO">Otro</option>
           </select>
+          {errors.genero && (
+            <span className="text-red-600">{errors.genero.message}</span>
+          )}
+        </label>
+
+        <label className="flex flex-col gap-2 text-sm text-slate-700">
+          Fecha de nacimiento *
+          <input
+            type="date"
+            max={new Date().toISOString().slice(0, 10)}
+            {...register("fechaNacimiento")}
+            className={claseInput}
+          />
+          {errors.fechaNacimiento && (
+            <span className="text-red-600">
+              {errors.fechaNacimiento.message}
+            </span>
+          )}
         </label>
       </div>
 
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-
       <button
         type="submit"
-        className="mt-5 rounded-xl bg-cyan-800 px-6 py-3 font-medium text-white transition hover:bg-cyan-900"
+        disabled={guardando}
+        className="mt-5 rounded-xl bg-cyan-800 px-6 py-3 font-medium text-white transition hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Registrar paciente
+        {guardando ? "Registrando..." : "Registrar paciente"}
       </button>
     </form>
   );

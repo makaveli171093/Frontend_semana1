@@ -5,6 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import { Layout } from "./layouts/Layout";
 import { PaginaDetallePaciente } from "./pages/PaginaDetallePaciente";
 import { PaginaNotFound } from "./pages/PaginaNotFound";
+import { PaginaGestionCitas } from "./pages/PaginaGestionCitas";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
         <Route path="/pacientes/:id" element={<PaginaDetallePaciente />} />
         <Route path="*" element={<PaginaNotFound />} />
+        <Route path="/gestion-citas" element={<PaginaGestionCitas />} />
       </Route>
     </Routes>
   );

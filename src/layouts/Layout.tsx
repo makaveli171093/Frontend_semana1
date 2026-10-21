@@ -19,6 +19,12 @@ const enlaces = [
     icono: "+",
     exacto: true,
   },
+  {
+    ruta: "/gestion-citas",
+    nombre: "Gestión de citas",
+    icono: "📅",
+    exacto: true,
+  },
 ];
 
 export function Layout() {
