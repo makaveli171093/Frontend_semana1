@@ -21,6 +21,10 @@ import {
 import axios from "axios";
 import { api } from "../lib/axios";
 import type { PacienteApi } from "../types/pacientesApi";
+import toast from "react-hot-toast";
+import { pacientesService } from "../services/pacientes";
+import { extraerMensajeError } from "../lib/errorHandler";
+import { ModalConfirmacion } from "../components/ui/ModalConfirmacion";
 
 function adaptarPaciente(registro: PacienteApi): Paciente {
   return {
@@ -36,9 +40,15 @@ function adaptarPaciente(registro: PacienteApi): Paciente {
 }
 
 export function PaginaPacientes() {
+  const [guardando, setGuardando] = useState(false);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
+  const [pacienteAEliminar, setPacienteAEliminar] = useState<Paciente | null>(
+    null,
+  );
+
+  const [eliminando, setEliminando] = useState(false);
 
   const [busqueda, setBusqueda] = useState<string>("");
 
@@ -80,19 +90,31 @@ export function PaginaPacientes() {
     }
   };
 
-  const agregarPaciente = (datos: DatosNuevoPaciente) => {
-    const nuevoPaciente: Paciente = {
-      id: crypto.randomUUID(),
-      nombre: datos.nombre,
-      apellido: datos.apellido,
-      email: datos.email,
-      estado: datos.estado,
-      telefono: "No registrado",
-      especialidadAsignada: "Sin asignar",
-      ultimaCita: new Date().toISOString().slice(0, 10),
-    };
+  const agregarPaciente = async (datos: DatosNuevoPaciente): Promise<void> => {
+    setGuardando(true);
 
-    setPacientes((prev) => [...prev, nuevoPaciente]);
+    try {
+      const nuevoPaciente = await pacientesService.crear({
+        firstName: datos.nombre.trim(),
+        lastName: datos.apellido.trim(),
+        email: datos.email.trim(),
+        phone: datos.telefono.trim(),
+        gender: datos.genero,
+        birthDate: datos.fechaNacimiento,
+      });
+
+      setPacientes((anteriores) => [
+        ...anteriores,
+        adaptarPaciente(nuevoPaciente),
+      ]);
+
+      toast.success("Paciente registrado correctamente");
+    } catch (err: unknown) {
+      toast.error(extraerMensajeError(err));
+      throw err;
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const cambiarEstado = (id: string, nuevoEstado: EstadoPaciente) => {
@@ -104,13 +126,30 @@ export function PaginaPacientes() {
   };
 
   const eliminarPaciente = (id: string) => {
-    const confirmar = window.confirm(
-      "¿Estás seguro de que deseas eliminar este paciente?",
-    );
+    const paciente = pacientes.find((item) => item.id === id);
 
-    if (!confirmar) return;
+    if (paciente) {
+      setPacienteAEliminar(paciente);
+    }
+  };
 
-    setPacientes((prev) => prev.filter((paciente) => paciente.id !== id));
+  const confirmarEliminacion = async () => {
+    if (!pacienteAEliminar || eliminando) return;
+
+    setEliminando(true);
+
+    try {
+      await pacientesService.eliminar(Number(pacienteAEliminar.id));
+
+      await cargarPacientes();
+
+      toast.success("Paciente desactivado correctamente");
+      setPacienteAEliminar(null);
+    } catch (err: unknown) {
+      toast.error(extraerMensajeError(err));
+    } finally {
+      setEliminando(false);
+    }
   };
 
   useEffect(() => {
@@ -119,7 +158,7 @@ export function PaginaPacientes() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
-      <FormularioPaciente onAgregar={agregarPaciente} />
+      <FormularioPaciente onAgregar={agregarPaciente} guardando={guardando} />
 
       <ResumenPacientes pacientes={pacientes} />
       <div className="mx-auto max-w-6xl">
@@ -252,6 +291,17 @@ export function PaginaPacientes() {
           ))}
         </div>
       </div>
+
+      <ModalConfirmacion
+        abierto={pacienteAEliminar !== null}
+        titulo="Desactivar paciente"
+        mensaje={`¿Estás seguro de que deseas desactivar a ${
+          pacienteAEliminar?.nombre ?? ""
+        } ${pacienteAEliminar?.apellido ?? ""}?`}
+        procesando={eliminando}
+        onConfirmar={() => void confirmarEliminacion()}
+        onCancelar={() => setPacienteAEliminar(null)}
+      />
     </main>
   );
 }
