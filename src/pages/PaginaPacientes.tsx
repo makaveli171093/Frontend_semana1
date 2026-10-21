@@ -141,9 +141,7 @@ export function PaginaPacientes() {
     try {
       await pacientesService.eliminar(Number(pacienteAEliminar.id));
 
-      setPacientes((anteriores) =>
-        anteriores.filter((paciente) => paciente.id !== pacienteAEliminar.id),
-      );
+      await cargarPacientes();
 
       toast.success("Paciente desactivado correctamente");
       setPacienteAEliminar(null);
