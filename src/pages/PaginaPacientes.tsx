@@ -18,43 +18,35 @@ import {
   FormularioPaciente,
   type DatosNuevoPaciente,
 } from "../components/pacientes/FormularioPaciente";
-import axios from "axios";
-import { api } from "../lib/axios";
-import type { PacienteApi } from "../types/pacientesApi";
+
 import toast from "react-hot-toast";
-import { pacientesService } from "../services/pacientes";
 import { extraerMensajeError } from "../lib/errorHandler";
 import { ModalConfirmacion } from "../components/ui/ModalConfirmacion";
-
-function adaptarPaciente(registro: PacienteApi): Paciente {
-  return {
-    id: String(registro.id),
-    nombre: registro.firstName,
-    apellido: registro.lastName,
-    email: registro.email,
-    telefono: registro.phone,
-    especialidadAsignada: "Sin asignar",
-    ultimaCita: "Sin información",
-    estado: registro.isActive ? "activo" : "inactivo",
-  };
-}
+import { useFiltrosStore } from "../stores/filtrosStore";
+import { usePacientesStore } from "../stores/pacientesStore";
 
 export function PaginaPacientes() {
   const [guardando, setGuardando] = useState(false);
-  const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(false);
   const [pacienteAEliminar, setPacienteAEliminar] = useState<Paciente | null>(
     null,
   );
+  const pacientes = usePacientesStore((s) => s.pacientes);
+  const cargando = usePacientesStore((s) => s.cargando);
+  const error = usePacientesStore((s) => s.error);
+
+  const cargarPacientes = usePacientesStore((s) => s.cargar);
+  const crearPaciente = usePacientesStore((s) => s.crear);
+  const desactivarPaciente = usePacientesStore((s) => s.eliminar);
 
   const [eliminando, setEliminando] = useState(false);
 
-  const [busqueda, setBusqueda] = useState<string>("");
+  const busqueda = useFiltrosStore((state) => state.queryPacientes);
 
-  const [estadoFiltro, setEstadoFiltro] = useState<EstadoPaciente | "Todos">(
-    "Todos",
-  );
+  const setBusqueda = useFiltrosStore((state) => state.setQueryPacientes);
+
+  const estadoFiltro = useFiltrosStore((s) => s.estadoPacienteFiltro);
+
+  const setEstadoFiltro = useFiltrosStore((s) => s.setEstadoPaciente);
 
   const pacientesFiltrados = pacientes.filter((paciente) => {
     const coincideNombre = `${paciente.nombre} ${paciente.apellido}`
@@ -67,34 +59,11 @@ export function PaginaPacientes() {
     return coincideNombre && coincideEstado;
   });
 
-  const cargarPacientes = async () => {
-    setCargando(true);
-    setError(false);
-
-    try {
-      const respuesta = await api.get<PacienteApi[]>("/patients");
-
-      if (!Array.isArray(respuesta.data)) {
-        throw new Error("Formato de pacientes inválido");
-      }
-
-      const pacientesAdaptados = respuesta.data.map(adaptarPaciente);
-
-      setPacientes(pacientesAdaptados);
-    } catch (error: unknown) {
-      if (!axios.isCancel(error)) {
-        setError(true);
-      }
-    } finally {
-      setCargando(false);
-    }
-  };
-
   const agregarPaciente = async (datos: DatosNuevoPaciente): Promise<void> => {
     setGuardando(true);
 
     try {
-      const nuevoPaciente = await pacientesService.crear({
+      await crearPaciente({
         firstName: datos.nombre.trim(),
         lastName: datos.apellido.trim(),
         email: datos.email.trim(),
@@ -102,11 +71,6 @@ export function PaginaPacientes() {
         gender: datos.genero,
         birthDate: datos.fechaNacimiento,
       });
-
-      setPacientes((anteriores) => [
-        ...anteriores,
-        adaptarPaciente(nuevoPaciente),
-      ]);
 
       toast.success("Paciente registrado correctamente");
     } catch (err: unknown) {
@@ -117,12 +81,8 @@ export function PaginaPacientes() {
     }
   };
 
-  const cambiarEstado = (id: string, nuevoEstado: EstadoPaciente) => {
-    setPacientes((prev) =>
-      prev.map((paciente) =>
-        paciente.id === id ? { ...paciente, estado: nuevoEstado } : paciente,
-      ),
-    );
+  const cambiarEstado = (_id: string, _estado: EstadoPaciente) => {
+    toast("Para desactivar un paciente, utiliza la opción Eliminar");
   };
 
   const eliminarPaciente = (id: string) => {
@@ -139,10 +99,7 @@ export function PaginaPacientes() {
     setEliminando(true);
 
     try {
-      await pacientesService.eliminar(Number(pacienteAEliminar.id));
-
-      await cargarPacientes();
-
+      await desactivarPaciente(Number(pacienteAEliminar.id));
       toast.success("Paciente desactivado correctamente");
       setPacienteAEliminar(null);
     } catch (err: unknown) {
@@ -154,7 +111,7 @@ export function PaginaPacientes() {
 
   useEffect(() => {
     void cargarPacientes();
-  }, []);
+  }, [cargarPacientes]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
