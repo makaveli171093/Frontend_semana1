@@ -1,19 +1,18 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-import {
-  citasService,
-  type CitaApi,
-  type NuevoEstadoCita,
-} from "../services/citas";
-
+import { useCitasStore } from "../stores/citasStore";
+import type { NuevoEstadoCita } from "../services/citas";
 import { extraerMensajeError } from "../lib/errorHandler";
 
 export function PaginaGestionCitas() {
   const [id, setId] = useState("");
-  const [cita, setCita] = useState<CitaApi | null>(null);
-  const [buscando, setBuscando] = useState(false);
-  const [actualizando, setActualizando] = useState(false);
+  const cita = useCitasStore((s) => s.citaSeleccionada);
+  const buscando = useCitasStore((s) => s.cargando);
+  const actualizando = useCitasStore((s) => s.actualizando);
+
+  const cargarPorId = useCitasStore((s) => s.cargarPorId);
+  const actualizarEstado = useCitasStore((s) => s.actualizarEstado);
 
   const buscarCita = async () => {
     const citaId = Number(id);
@@ -23,44 +22,21 @@ export function PaginaGestionCitas() {
       return;
     }
 
-    setBuscando(true);
-    setCita(null);
-
     try {
-      const resultado = await citasService.obtenerPorId(citaId);
-      setCita(resultado);
+      await cargarPorId(citaId);
     } catch (err: unknown) {
       toast.error(extraerMensajeError(err));
-    } finally {
-      setBuscando(false);
     }
   };
 
   const cambiarEstado = async (nuevoEstado: NuevoEstadoCita) => {
-    if (!cita || actualizando || cita.status !== "PROGRAMADA") {
-      return;
-    }
-
-    const citaAnterior = cita;
-
-    // Actualización optimista: cambia antes del PATCH.
-    setCita({ ...cita, status: nuevoEstado });
-    setActualizando(true);
+    if (!cita || actualizando || buscando) return;
 
     try {
-      const actualizada = await citasService.actualizarEstado(
-        cita.id,
-        nuevoEstado,
-      );
-
-      setCita(actualizada);
+      await actualizarEstado(cita.id, nuevoEstado);
       toast.success("Estado actualizado correctamente");
     } catch (err: unknown) {
-      // Revertimos al valor confirmado anteriormente.
-      setCita(citaAnterior);
       toast.error(`Cambio revertido: ${extraerMensajeError(err)}`);
-    } finally {
-      setActualizando(false);
     }
   };
 

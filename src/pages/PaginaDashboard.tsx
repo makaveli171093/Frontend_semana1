@@ -3,125 +3,33 @@ import MetricCard from "../components/MetricCard";
 import StatusBadge from "../components/StatusBadge";
 import type { Metrica } from "../types";
 import { Link } from "react-router-dom";
-import { api } from "../lib/axios";
-import axios from "axios";
-
-interface EstadisticasCitas {
-  programadas: number;
-  completadas: number;
-}
+import { useDashboardStore } from "../stores/dashboardStore";
 
 function PaginaDashboard() {
   const [pacientes, setPacientes] = useState<number>(128);
   const [mantenimiento, setMantenimiento] = useState<boolean>(false);
-  const [totalPacientes, setTotalPacientes] = useState<number | null>(null);
-  const [cargandoPacientes, setCargandoPacientes] = useState(true);
-  const [errorPacientes, setErrorPacientes] = useState(false);
-  const [totalMedicos, setTotalMedicos] = useState<number | null>(null);
-  const [cargandoMedicos, setCargandoMedicos] = useState(true);
-  const [errorMedicos, setErrorMedicos] = useState(false);
-  const [estadisticasCitas, setEstadisticasCitas] =
-    useState<EstadisticasCitas | null>(null);
-
-  const [cargandoCitas, setCargandoCitas] = useState(true);
-  const [errorCitas, setErrorCitas] = useState(false);
+  const totalPacientes = useDashboardStore((s) => s.totalPacientes);
+  const totalMedicos = useDashboardStore((s) => s.totalMedicos);
+  const estadisticasCitas = useDashboardStore((s) => s.estadisticasCitas);
+  const cargando = useDashboardStore((s) => s.cargando);
+  const error = useDashboardStore((s) => s.error);
+  const cargarDashboard = useDashboardStore((s) => s.cargar);
 
   const incrementarPacientes = () => {
     setPacientes((anterior) => anterior + 1);
   };
-
   const decrementarPacientes = () => {
     setPacientes((anterior) => Math.max(0, anterior - 1));
   };
-
   useEffect(() => {
-    const controlador = new AbortController();
-
-    api
-      .get<EstadisticasCitas>("/reports/appointment-stats", {
-        signal: controlador.signal,
-      })
-      .then((respuesta) => {
-        setEstadisticasCitas(respuesta.data);
-        setErrorCitas(false);
-      })
-      .catch((error: unknown) => {
-        if (!axios.isCancel(error)) {
-          setErrorCitas(true);
-        }
-      })
-      .finally(() => {
-        if (!controlador.signal.aborted) {
-          setCargandoCitas(false);
-        }
-      });
-
-    return () => controlador.abort();
-  }, []);
-
-  useEffect(() => {
-    const controlador = new AbortController();
-
-    api
-      .get<unknown[]>("/patients", {
-        signal: controlador.signal,
-      })
-      .then((respuesta) => {
-        setTotalPacientes(respuesta.data.length);
-        setErrorPacientes(false);
-      })
-      .catch((error: unknown) => {
-        if (!axios.isCancel(error)) {
-          setErrorPacientes(true);
-        }
-      })
-      .finally(() => {
-        if (!controlador.signal.aborted) {
-          setCargandoPacientes(false);
-        }
-      });
-
-    return () => controlador.abort();
-  }, []);
-
-  useEffect(() => {
-    const controlador = new AbortController();
-
-    api
-      .get<unknown[]>("/doctors", {
-        signal: controlador.signal,
-      })
-      .then((respuesta) => {
-        if (!Array.isArray(respuesta.data)) {
-          throw new Error("La API no devolvió un arreglo de médicos");
-        }
-
-        setTotalMedicos(respuesta.data.length);
-        setErrorMedicos(false);
-      })
-      .catch((error: unknown) => {
-        if (!axios.isCancel(error)) {
-          setErrorMedicos(true);
-        }
-      })
-      .finally(() => {
-        if (!controlador.signal.aborted) {
-          setCargandoMedicos(false);
-        }
-      });
-
-    return () => controlador.abort();
-  }, []);
+    void cargarDashboard();
+  }, [cargarDashboard]);
 
   const metricas: Metrica[] = [
     {
       id: "pacientes",
       titulo: "Pacientes",
-      valor: cargandoPacientes
-        ? "Cargando..."
-        : errorPacientes
-          ? "Error"
-          : (totalPacientes ?? 0),
+      valor: cargando ? "Cargando..." : error ? "Error" : totalPacientes,
       descripcion: "Total registrado en PostgreSQL",
       tendencia: "neutra",
       icono: "👥",
@@ -129,9 +37,9 @@ function PaginaDashboard() {
     {
       id: "citas",
       titulo: "Citas Programadas",
-      valor: cargandoCitas
+      valor: cargando
         ? "Cargando..."
-        : errorCitas
+        : error
           ? "Error"
           : (estadisticasCitas?.programadas ?? 0),
       descripcion: "Citas programadas en PostgreSQL",
@@ -141,9 +49,9 @@ function PaginaDashboard() {
     {
       id: "completadas",
       titulo: "Citas Completadas",
-      valor: cargandoCitas
+      valor: cargando
         ? "Cargando..."
-        : errorCitas
+        : error
           ? "Error"
           : (estadisticasCitas?.completadas ?? 0),
       descripcion: "Total histórico de citas completadas",
@@ -153,11 +61,7 @@ function PaginaDashboard() {
     {
       id: "medicos",
       titulo: "Médicos",
-      valor: cargandoMedicos
-        ? "Cargando..."
-        : errorMedicos
-          ? "Error"
-          : (totalMedicos ?? 0),
+      valor: cargando ? "Cargando..." : error ? "Error" : totalMedicos,
       descripcion: "Médicos registrados en PostgreSQL",
       tendencia: "neutra",
       icono: "🩺",

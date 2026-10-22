@@ -12,6 +12,12 @@ export interface CitaApi {
   scheduledAt: string;
   reason?: string | null;
 }
+export type CrearCitaDTO = Pick<
+  CitaApi,
+  "patientId" | "doctorId" | "scheduledAt"
+> & {
+  reason?: string;
+};
 
 export const citasService = {
   obtenerPorId: async (id: number): Promise<CitaApi> => {
@@ -27,6 +33,19 @@ export const citasService = {
       status: estado,
     });
 
+    return respuesta.data;
+  },
+
+  obtenerPorPaciente: async (id: number): Promise<CitaApi[]> => {
+    const respuesta = await api.get<{ appointments: CitaApi[] }>(
+      `/patients/${id}`,
+    );
+
+    return respuesta.data.appointments;
+  },
+
+  crear: async (datos: CrearCitaDTO): Promise<CitaApi> => {
+    const respuesta = await api.post<CitaApi>("/appointments", datos);
     return respuesta.data;
   },
 };
