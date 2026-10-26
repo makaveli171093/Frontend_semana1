@@ -85,10 +85,10 @@ export function Layout() {
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-800">
-              {usuario?.nombre ?? "Usuario"}
+              {usuario?.email ?? "Pepito"}
             </p>
             <p className="text-xs text-slate-500">
-              {usuario?.rol ?? "Sesión autenticada"}
+              {usuario?.role ?? "Sesión autenticada"}
             </p>
           </div>
 

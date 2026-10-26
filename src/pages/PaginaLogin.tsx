@@ -15,7 +15,7 @@ import {
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { extraerMensajeError } from "../lib/errorHandler";
-import { login } from "../services/auth";
+import { decodificarToken, login } from "../services/auth";
 import { loginSchema, type LoginFormData } from "../schemas/loginSchema";
 import { useAuthStore } from "../stores/authStore";
 
@@ -39,7 +39,8 @@ export default function PaginaLogin() {
 
   const onSubmit = async (datos: LoginFormData): Promise<void> => {
     try {
-      const { token, usuario } = await login(datos);
+      const { token } = await login(datos);
+      const usuario = decodificarToken(token);
       setAuth(token, usuario);
       toast.success("¡Bienvenido!");
       navigate("/", { replace: true });
@@ -64,7 +65,9 @@ export default function PaginaLogin() {
           </div>
           <div>
             <p className="text-lg font-bold">Clínica Salud Integral</p>
-            <p className="text-sm text-cyan-100/70">Sistema de gestión médica</p>
+            <p className="text-sm text-cyan-100/70">
+              Sistema de gestión médica
+            </p>
           </div>
         </div>
 
@@ -75,7 +78,9 @@ export default function PaginaLogin() {
           </div>
           <h1 className="text-4xl font-bold leading-tight xl:text-5xl">
             Cuidamos la salud.
-            <span className="mt-2 block text-teal-300">Simplificamos la gestión.</span>
+            <span className="mt-2 block text-teal-300">
+              Simplificamos la gestión.
+            </span>
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-cyan-100/75">
             Accede a pacientes, citas médicas y reportes desde un único espacio
@@ -97,7 +102,9 @@ export default function PaginaLogin() {
             </div>
             <div>
               <p className="font-bold text-slate-900">Clínica Salud Integral</p>
-              <p className="text-sm text-slate-500">Sistema de gestión médica</p>
+              <p className="text-sm text-slate-500">
+                Sistema de gestión médica
+              </p>
             </div>
           </div>
 
@@ -114,9 +121,16 @@ export default function PaginaLogin() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+              className="space-y-5"
+            >
               <div>
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Correo electrónico
                 </label>
                 <div className="relative">
@@ -141,14 +155,21 @@ export default function PaginaLogin() {
                   />
                 </div>
                 {errors.email && (
-                  <p id="email-error" role="alert" className="mt-2 text-sm text-rose-600">
+                  <p
+                    id="email-error"
+                    role="alert"
+                    className="mt-2 text-sm text-rose-600"
+                  >
                     {errors.email.message}
                   </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="password"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Contraseña
                 </label>
                 <div className="relative">
@@ -163,7 +184,9 @@ export default function PaginaLogin() {
                     autoComplete="current-password"
                     placeholder="Mínimo 6 caracteres"
                     aria-invalid={Boolean(errors.password)}
-                    aria-describedby={errors.password ? "password-error" : undefined}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
                     className={`w-full rounded-xl border bg-white py-3 pl-11 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 ${
                       errors.password
                         ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
@@ -174,7 +197,11 @@ export default function PaginaLogin() {
                   <button
                     type="button"
                     onClick={() => setMostrarPassword((visible) => !visible)}
-                    aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={
+                      mostrarPassword
+                        ? "Ocultar contraseña"
+                        : "Mostrar contraseña"
+                    }
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-700"
                   >
                     {mostrarPassword ? (
@@ -185,7 +212,11 @@ export default function PaginaLogin() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p id="password-error" role="alert" className="mt-2 text-sm text-rose-600">
+                  <p
+                    id="password-error"
+                    role="alert"
+                    className="mt-2 text-sm text-rose-600"
+                  >
                     {errors.password.message}
                   </p>
                 )}
@@ -211,9 +242,13 @@ export default function PaginaLogin() {
             </form>
 
             <div className="mt-6 flex items-start gap-2 rounded-xl bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-              <ShieldCheck size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700" />
-              Tu sesión se mantiene al recargar la página y se cierra si el servidor
-              rechaza el token.
+              <ShieldCheck
+                size={16}
+                aria-hidden="true"
+                className="mt-0.5 shrink-0 text-emerald-700"
+              />
+              Tu sesión se mantiene al recargar la página y se cierra si el
+              servidor rechaza el token.
             </div>
           </div>
 
