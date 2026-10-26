@@ -9,4 +9,6 @@ export interface Paciente {
   especialidadAsignada: string;
   ultimaCita: string;
   estado: EstadoPaciente;
+  genero?: "MASCULINO" | "FEMENINO" | "OTRO";
+  fechaNacimiento?: string;
 }

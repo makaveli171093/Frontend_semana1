@@ -88,6 +88,12 @@ function PaginaDashboard() {
         >
           Ver Pacientes →
         </Link>
+        <Link
+          to="/reportes"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Ver reportes →
+        </Link>
 
         {/* Banner de mantenimiento */}
         {mantenimiento && (

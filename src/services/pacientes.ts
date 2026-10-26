@@ -1,10 +1,6 @@
 import { api } from "../lib/axios";
-
-import type {
-  PacienteApi,
-  CrearPacienteDTO,
-  ActualizarPacienteDTO,
-} from "../types/pacientesApi";
+import type { PacienteApi } from "../types/pacientesApi";
+import type { CrearPacienteDTO, ActualizarPacienteDTO } from "../types/dtos";
 
 export const pacientesService = {
   listar: async (): Promise<PacienteApi[]> => {

@@ -1,23 +1,13 @@
 import { api } from "../lib/axios";
 
-export type EstadoCita = "PROGRAMADA" | "COMPLETADA" | "CANCELADA" | "ATENDIDO";
+import type { CitaApi, NuevoEstadoCita } from "../types/citasApi";
 
-export type NuevoEstadoCita = "COMPLETADA" | "CANCELADA";
+import type { CrearCitaDTO } from "../types/dtos";
 
-export interface CitaApi {
-  id: number;
-  patientId: number;
-  doctorId: number;
-  status: EstadoCita;
-  scheduledAt: string;
-  reason?: string | null;
-}
-export type CrearCitaDTO = Pick<
-  CitaApi,
-  "patientId" | "doctorId" | "scheduledAt"
-> & {
-  reason?: string;
-};
+// Mantenemos estas exportaciones para no romper los imports existentes.
+export type { CitaApi, EstadoCita, NuevoEstadoCita } from "../types/citasApi";
+
+export type { CrearCitaDTO } from "../types/dtos";
 
 export const citasService = {
   obtenerPorId: async (id: number): Promise<CitaApi> => {
@@ -32,7 +22,6 @@ export const citasService = {
     const respuesta = await api.patch<CitaApi>(`/appointments/${id}/status`, {
       status: estado,
     });
-
     return respuesta.data;
   },
 
@@ -40,7 +29,6 @@ export const citasService = {
     const respuesta = await api.get<{ appointments: CitaApi[] }>(
       `/patients/${id}`,
     );
-
     return respuesta.data.appointments;
   },
 

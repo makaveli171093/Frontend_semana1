@@ -8,7 +8,3 @@ export interface PacienteApi {
   birthDate: string;
   isActive: boolean;
 }
-
-export type CrearPacienteDTO = Omit<PacienteApi, "id" | "isActive">;
-
-export type ActualizarPacienteDTO = Partial<CrearPacienteDTO>;
