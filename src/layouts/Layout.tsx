@@ -1,4 +1,8 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import toast from "react-hot-toast";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+
+import { useAuthStore } from "../stores/authStore";
 
 const enlaces = [
   {
@@ -29,6 +33,16 @@ const enlaces = [
 ];
 
 export function Layout() {
+  const navigate = useNavigate();
+  const usuario = useAuthStore((state) => state.usuario);
+  const logout = useAuthStore((state) => state.logout);
+
+  const cerrarSesion = () => {
+    logout();
+    toast.success("Sesión cerrada correctamente");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
       <aside className="border-b border-slate-200 bg-white md:min-h-screen md:w-64 md:shrink-0 md:border-b-0 md:border-r">
@@ -52,11 +66,9 @@ export function Layout() {
               to={enlace.ruta}
               end={enlace.exacto}
               className={({ isActive }) =>
-                `flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-cyan-800 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
+                isActive
+                  ? "flex shrink-0 items-center gap-3 rounded-xl bg-cyan-800 px-4 py-3 text-sm font-medium text-white transition-colors"
+                  : "flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
               }
             >
               <span aria-hidden="true" className="text-lg">
@@ -69,8 +81,27 @@ export function Layout() {
         </nav>
       </aside>
 
-      {/* Contenido correspondiente a la ruta */}
       <div className="min-w-0 flex-1">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-800">
+              {usuario?.nombre ?? "Usuario"}
+            </p>
+            <p className="text-xs text-slate-500">
+              {usuario?.rol ?? "Sesión autenticada"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={cerrarSesion}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus:ring-4 focus:ring-cyan-100"
+          >
+            <LogOut size={16} aria-hidden="true" />
+            <span className="hidden sm:inline">Cerrar sesión</span>
+          </button>
+        </header>
+
         <Outlet />
       </div>
     </div>
