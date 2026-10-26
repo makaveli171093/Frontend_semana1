@@ -24,6 +24,7 @@ import { extraerMensajeError } from "../lib/errorHandler";
 import { ModalConfirmacion } from "../components/ui/ModalConfirmacion";
 import { useFiltrosStore } from "../stores/filtrosStore";
 import { usePacientesStore } from "../stores/pacientesStore";
+import { useDebounce } from "../hooks/useDebounce";
 
 export function PaginaPacientes() {
   const [guardando, setGuardando] = useState(false);
@@ -44,6 +45,8 @@ export function PaginaPacientes() {
 
   const setBusqueda = useFiltrosStore((state) => state.setQueryPacientes);
 
+  const busquedaDebounced = useDebounce(busqueda, 350);
+
   const estadoFiltro = useFiltrosStore((s) => s.estadoPacienteFiltro);
 
   const setEstadoFiltro = useFiltrosStore((s) => s.setEstadoPaciente);
@@ -51,7 +54,7 @@ export function PaginaPacientes() {
   const pacientesFiltrados = pacientes.filter((paciente) => {
     const coincideNombre = `${paciente.nombre} ${paciente.apellido}`
       .toLowerCase()
-      .includes(busqueda.trim().toLowerCase());
+      .includes(busquedaDebounced.trim().toLowerCase());
 
     const coincideEstado =
       estadoFiltro === "Todos" || paciente.estado === estadoFiltro;
