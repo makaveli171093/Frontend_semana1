@@ -6,12 +6,14 @@ interface PacienteCardProps {
   paciente: Paciente;
   onCambiarEstado: (id: string, estado: EstadoPaciente) => void;
   onEliminar: (id: string) => void;
+  onEditar: (paciente: Paciente) => void;
 }
 
 export function PacienteCard({
   paciente,
   onCambiarEstado,
   onEliminar,
+  onEditar,
 }: PacienteCardProps) {
   const nombreCompleto = `${paciente.nombre} ${paciente.apellido}`;
 
@@ -87,6 +89,13 @@ export function PacienteCard({
           className="mt-3 w-full rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-700 hover:bg-red-50"
         >
           Eliminar paciente
+        </button>
+        <button
+          type="button"
+          onClick={() => onEditar(paciente)}
+          className="mt-3 w-full rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-700 hover:bg-red-50"
+        >
+          Editar
         </button>
         <Link
           to={`/pacientes/${paciente.id}`}

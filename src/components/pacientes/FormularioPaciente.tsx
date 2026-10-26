@@ -1,5 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import type { Paciente } from "../../types/paciente";
 
 import {
   pacienteSchema,
@@ -11,11 +13,24 @@ export type { DatosNuevoPaciente } from "../../schemas/paciente.schema";
 interface FormularioPacienteProps {
   onAgregar: (datos: DatosNuevoPaciente) => Promise<void>;
   guardando: boolean;
+  pacienteInicial?: Paciente | null;
+  onCancelarEdicion?: () => void;
 }
+
+const valoresInicialesVacios: DatosNuevoPaciente = {
+  nombre: "",
+  apellido: "",
+  email: "",
+  telefono: "",
+  genero: "MASCULINO",
+  fechaNacimiento: "",
+};
 
 export function FormularioPaciente({
   onAgregar,
   guardando,
+  pacienteInicial = null,
+  onCancelarEdicion,
 }: FormularioPacienteProps) {
   const {
     register,
@@ -24,15 +39,22 @@ export function FormularioPaciente({
     formState: { errors },
   } = useForm<DatosNuevoPaciente>({
     resolver: zodResolver(pacienteSchema),
-    defaultValues: {
-      nombre: "",
-      apellido: "",
-      email: "",
-      telefono: "",
-      genero: "MASCULINO",
-      fechaNacimiento: "",
-    },
+    defaultValues: valoresInicialesVacios,
   });
+  useEffect(() => {
+    if (pacienteInicial) {
+      reset({
+        nombre: pacienteInicial.nombre,
+        apellido: pacienteInicial.apellido,
+        email: pacienteInicial.email,
+        telefono: pacienteInicial.telefono,
+        genero: pacienteInicial.genero ?? "MASCULINO",
+        fechaNacimiento: pacienteInicial.fechaNacimiento ?? "",
+      });
+    } else {
+      reset(valoresInicialesVacios);
+    }
+  }, [pacienteInicial, reset]);
 
   const enviar = async (datos: DatosNuevoPaciente) => {
     try {
@@ -140,8 +162,24 @@ export function FormularioPaciente({
         disabled={guardando}
         className="mt-5 rounded-xl bg-cyan-800 px-6 py-3 font-medium text-white transition hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {guardando ? "Registrando..." : "Registrar paciente"}
+        {guardando
+          ? pacienteInicial
+            ? "Guardando cambios..."
+            : "Registrando..."
+          : pacienteInicial
+            ? "Guardar cambios"
+            : "Registrar paciente"}
       </button>
+      {pacienteInicial && (
+        <button
+          type="button"
+          className="mt-5 rounded-xl bg-red-800 px-6 py-3 font-medium text-white transition hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={onCancelarEdicion}
+          disabled={guardando}
+        >
+          Cancelar edición
+        </button>
+      )}
     </form>
   );
 }

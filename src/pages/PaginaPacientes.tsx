@@ -31,6 +31,7 @@ export function PaginaPacientes() {
   const [pacienteAEliminar, setPacienteAEliminar] = useState<Paciente | null>(
     null,
   );
+  const [pacienteAEditar, setPacienteAEditar] = useState<Paciente | null>(null);
   const pacientes = usePacientesStore((s) => s.pacientes);
   const cargando = usePacientesStore((s) => s.cargando);
   const error = usePacientesStore((s) => s.error);
@@ -38,6 +39,7 @@ export function PaginaPacientes() {
   const cargarPacientes = usePacientesStore((s) => s.cargar);
   const crearPaciente = usePacientesStore((s) => s.crear);
   const desactivarPaciente = usePacientesStore((s) => s.eliminar);
+  const actualizarPaciente = usePacientesStore((s) => s.actualizar);
 
   const [eliminando, setEliminando] = useState(false);
 
@@ -62,20 +64,29 @@ export function PaginaPacientes() {
     return coincideNombre && coincideEstado;
   });
 
-  const agregarPaciente = async (datos: DatosNuevoPaciente): Promise<void> => {
+  const guardarPaciente = async (datos: DatosNuevoPaciente): Promise<void> => {
     setGuardando(true);
 
     try {
-      await crearPaciente({
+      const datosApi = {
         firstName: datos.nombre.trim(),
         lastName: datos.apellido.trim(),
         email: datos.email.trim(),
         phone: datos.telefono.trim(),
         gender: datos.genero,
         birthDate: datos.fechaNacimiento,
-      });
+      };
 
-      toast.success("Paciente registrado correctamente");
+      if (pacienteAEditar) {
+        await actualizarPaciente(Number(pacienteAEditar.id), datosApi);
+
+        toast.success("Paciente actualizado correctamente");
+        setPacienteAEditar(null);
+      } else {
+        await crearPaciente(datosApi);
+
+        toast.success("Paciente registrado correctamente");
+      }
     } catch (err: unknown) {
       toast.error(extraerMensajeError(err));
       throw err;
@@ -118,7 +129,12 @@ export function PaginaPacientes() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
-      <FormularioPaciente onAgregar={agregarPaciente} guardando={guardando} />
+      <FormularioPaciente
+        onAgregar={guardarPaciente}
+        guardando={guardando}
+        pacienteInicial={pacienteAEditar}
+        onCancelarEdicion={() => setPacienteAEditar(null)}
+      />
 
       <ResumenPacientes pacientes={pacientes} />
       <div className="mx-auto max-w-6xl">
@@ -233,6 +249,7 @@ export function PaginaPacientes() {
                   paciente={paciente}
                   onCambiarEstado={cambiarEstado}
                   onEliminar={eliminarPaciente}
+                  onEditar={setPacienteAEditar}
                 />
               ))}
             </tbody>
@@ -247,6 +264,7 @@ export function PaginaPacientes() {
               paciente={paciente}
               onCambiarEstado={cambiarEstado}
               onEliminar={eliminarPaciente}
+              onEditar={setPacienteAEditar}
             />
           ))}
         </div>

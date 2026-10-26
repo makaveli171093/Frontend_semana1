@@ -6,12 +6,14 @@ interface PacienteRowProps {
   paciente: Paciente;
   onCambiarEstado: (id: string, estado: EstadoPaciente) => void;
   onEliminar: (id: string) => void;
+  onEditar: (paciente: Paciente) => void;
 }
 
 export function PacienteRow({
   paciente,
   onCambiarEstado,
   onEliminar,
+  onEditar,
 }: PacienteRowProps) {
   const iniciales = paciente.nombre.charAt(0) + paciente.apellido.charAt(0);
 
@@ -82,6 +84,13 @@ export function PacienteRow({
           className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50"
         >
           Eliminar
+        </button>
+        <button
+          type="button"
+          onClick={() => onEditar(paciente)}
+          className="mr-2 inline-block rounded-lg border border-cyan-200 px-3 py-2 text-xs font-medium text-cyan-800 hover:bg-cyan-50"
+        >
+          Editar
         </button>
         <Link
           to={`/pacientes/${paciente.id}`}

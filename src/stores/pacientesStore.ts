@@ -5,11 +5,8 @@ import { pacientesService } from "../services/pacientes";
 import { extraerMensajeError } from "../lib/errorHandler";
 
 import type { Paciente } from "../types/paciente";
-import type {
-  PacienteApi,
-  CrearPacienteDTO,
-  ActualizarPacienteDTO,
-} from "../types/pacientesApi";
+import type { PacienteApi } from "../types/pacientesApi";
+import type { CrearPacienteDTO, ActualizarPacienteDTO } from "../types/dtos";
 
 function adaptarPaciente(registro: PacienteApi): Paciente {
   return {
@@ -21,6 +18,8 @@ function adaptarPaciente(registro: PacienteApi): Paciente {
     especialidadAsignada: "Sin asignar",
     ultimaCita: "Sin información",
     estado: registro.isActive ? "activo" : "inactivo",
+    genero: registro.gender,
+    fechaNacimiento: registro.birthDate,
   };
 }
 

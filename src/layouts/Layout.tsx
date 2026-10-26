@@ -25,6 +25,7 @@ const enlaces = [
     icono: "📅",
     exacto: true,
   },
+  { ruta: "/reportes", nombre: "Reportes", icono: "📊", exacto: true },
 ];
 
 export function Layout() {
