@@ -24,9 +24,7 @@ function App() {
           <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
           <Route path="/pacientes/:id" element={<PaginaDetallePaciente />} />
           <Route path="/gestion-citas" element={<PaginaGestionCitas />} />
-          <Route
-            element={<RutaProtegida rolesPermitidos={["GERENCIA", "ADMIN"]} />}
-          >
+          <Route element={<RutaProtegida rolesPermitidos={["GERENCIA"]} />}>
             <Route path="/reportes" element={<PaginaReportes />} />
           </Route>
 
