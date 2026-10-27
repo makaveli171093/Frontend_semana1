@@ -10,6 +10,7 @@ import { PaginaGestionCitas } from "./pages/PaginaGestionCitas";
 import { PaginaReportes } from "./pages/PaginaReportes";
 import PaginaLogin from "./pages/PaginaLogin";
 import { RutaProtegida } from "./components/RutaProtegida";
+import { PaginaSinAcceso } from "./pages/PaginaSinAcceso";
 
 function App() {
   return (
@@ -23,7 +24,12 @@ function App() {
           <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
           <Route path="/pacientes/:id" element={<PaginaDetallePaciente />} />
           <Route path="/gestion-citas" element={<PaginaGestionCitas />} />
-          <Route path="/reportes" element={<PaginaReportes />} />
+          <Route element={<RutaProtegida rolesPermitidos={["GERENCIA"]} />}>
+            <Route path="/reportes" element={<PaginaReportes />} />
+          </Route>
+
+          <Route path="/sin-acceso" element={<PaginaSinAcceso />} />
+
           <Route path="*" element={<PaginaNotFound />} />
         </Route>
       </Route>
