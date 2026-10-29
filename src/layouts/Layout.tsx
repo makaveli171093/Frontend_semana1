@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
@@ -60,7 +60,17 @@ export function Layout() {
           aria-label="Navegación principal"
           className="flex gap-2 overflow-x-auto p-3 md:flex-col"
         >
-          {enlaces.map((enlace) => (
+          {enlaces
+            .filter((enlace) => {
+              if (usuario?.role === "MEDICO") {
+                return enlace.ruta === "/gestion-citas";
+              }
+              if (enlace.ruta === "/reportes") {
+                return usuario?.role === "GERENCIA";
+              }
+              return true;
+            })
+            .map((enlace) => (
             <NavLink
               key={enlace.ruta}
               to={enlace.ruta}
@@ -78,6 +88,20 @@ export function Layout() {
               {enlace.nombre}
             </NavLink>
           ))}
+
+          {usuario?.role === "MEDICO" && (
+            <NavLink
+              to="/perfil"
+              className={({ isActive }) =>
+                isActive
+                  ? "flex shrink-0 items-center gap-3 rounded-xl bg-cyan-800 px-4 py-3 text-base font-medium text-white transition-colors"
+                  : "flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              }
+            >
+              <UserRound size={18} aria-hidden="true" />
+              <span>Mi perfil</span>
+            </NavLink>
+          )}
         </nav>
       </aside>
 

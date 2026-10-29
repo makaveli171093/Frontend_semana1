@@ -7,6 +7,10 @@ export interface UsuarioAutenticado {
   role: string;
   iat?: number;
   exp?: number;
+  nombre?: string;
+  telefono?: string | null;
+  foto?: string | null;
+  especialidad?: string | null;
 }
 
 export interface LoginResponse {
