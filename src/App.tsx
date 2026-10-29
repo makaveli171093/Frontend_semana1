@@ -10,7 +10,9 @@ import { PaginaGestionCitas } from "./pages/PaginaGestionCitas";
 import { PaginaReportes } from "./pages/PaginaReportes";
 import PaginaLogin from "./pages/PaginaLogin";
 import { RutaProtegida } from "./components/RutaProtegida";
+import { RutaSinMedico } from "./components/RutaSinMedico";
 import { PaginaSinAcceso } from "./pages/PaginaSinAcceso";
+import { PaginaPerfil } from "./pages/PaginaPerfil";
 
 function App() {
   return (
@@ -19,11 +21,16 @@ function App() {
 
       <Route element={<RutaProtegida />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<PaginaDashboard />} />
-          <Route path="/pacientes" element={<PaginaPacientes />} />
-          <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
-          <Route path="/pacientes/:id" element={<PaginaDetallePaciente />} />
+          <Route element={<RutaSinMedico />}>
+            <Route path="/" element={<PaginaDashboard />} />
+            <Route path="/pacientes" element={<PaginaPacientes />} />
+            <Route path="/citas/nueva" element={<PaginaNuevaCita />} />
+            <Route path="/pacientes/:id" element={<PaginaDetallePaciente />} />
+          </Route>
           <Route path="/gestion-citas" element={<PaginaGestionCitas />} />
+          <Route element={<RutaProtegida rolesPermitidos={["MEDICO"]} />}>
+            <Route path="/perfil" element={<PaginaPerfil />} />
+          </Route>
           <Route element={<RutaProtegida rolesPermitidos={["GERENCIA"]} />}>
             <Route path="/reportes" element={<PaginaReportes />} />
           </Route>
