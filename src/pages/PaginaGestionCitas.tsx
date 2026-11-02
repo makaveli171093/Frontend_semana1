@@ -1,23 +1,22 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-
-import { useCitasStore } from "../stores/citasStore";
 import type { NuevoEstadoCita } from "../services/citas";
 import { extraerMensajeError } from "../lib/errorHandler";
-
 import { Spinner } from "../shared/components/ui/Spinner";
 import { ModalConfirmacion } from "../shared/components/ui/ModalConfirmacion";
+import { useCitas } from "../features/citas/hooks/useCitas";
 
 export function PaginaGestionCitas() {
   const [id, setId] = useState("");
   const [modalCancelar, setModalCancelar] = useState(false);
 
-  const cita = useCitasStore((s) => s.citaSeleccionada);
-  const buscando = useCitasStore((s) => s.cargando);
-  const actualizando = useCitasStore((s) => s.actualizando);
-
-  const cargarPorId = useCitasStore((s) => s.cargarPorId);
-  const actualizarEstado = useCitasStore((s) => s.actualizarEstado);
+  const {
+    citaSeleccionada: cita,
+    cargando: buscando,
+    actualizando,
+    cargarPorId,
+    actualizarEstado,
+  } = useCitas();
 
   const buscarCita = async () => {
     const citaId = Number(id);
