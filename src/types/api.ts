@@ -3,4 +3,5 @@ export interface RespuestaPaginada<T> {
   total: number;
   pagina: number;
   limite: number;
+  totalPaginas: number;
 }
