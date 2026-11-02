@@ -3,6 +3,8 @@ import { BadgeEstado } from "../components/pacientes/BadgeEstado";
 import { PaginaNotFound } from "./PaginaNotFound";
 import { useApi } from "../hooks/useApi";
 import type { PacienteApi } from "../types/pacientesApi";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
+import { Spinner } from "../shared/components/ui/Spinner";
 
 export function PaginaDetallePaciente() {
   const { id } = useParams<{ id: string }>();
@@ -46,23 +48,22 @@ export function PaginaDetallePaciente() {
 
         {loading ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-slate-600">Cargando datos del paciente...</p>
+            <Spinner />
           </section>
         ) : error || !paciente ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="font-semibold text-red-700">
-              {error ?? "No se encontró el paciente."}
-            </p>
-
-            <button
-              type="button"
-              onClick={refetch}
-              className="mt-4 rounded-lg bg-cyan-800 px-4 py-2 text-white hover:bg-cyan-900"
-            >
-              Reintentar
-            </button>
+            <AlertaBanner
+              tipo="error"
+              titulo="No se pudo cargar el paciente"
+              mensaje={error ?? "No se encontró el paciente."}
+              accion={{
+                label: "Reintentar",
+                onClick: refetch,
+              }}
+            />
           </section>
         ) : (
+          // Conserva aquí tu sección actual con los datos del paciente.
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
               <div>

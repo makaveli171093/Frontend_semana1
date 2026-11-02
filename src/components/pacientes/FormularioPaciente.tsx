@@ -8,6 +8,10 @@ import {
   type DatosNuevoPaciente,
 } from "../../schemas/paciente.schema";
 
+const FECHA_HOY = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/La_Paz",
+}).format(new Date());
+
 export type { DatosNuevoPaciente } from "../../schemas/paciente.schema";
 
 interface FormularioPacienteProps {
@@ -145,7 +149,7 @@ export function FormularioPaciente({
           Fecha de nacimiento *
           <input
             type="date"
-            max={new Date().toISOString().slice(0, 10)}
+            max={FECHA_HOY}
             {...register("fechaNacimiento")}
             className={claseInput}
           />

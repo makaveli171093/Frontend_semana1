@@ -14,6 +14,8 @@ import {
 import { extraerMensajeError } from "../lib/errorHandler";
 import { reportesService } from "../services/reportes";
 import type { CitasPorEspecialidadApi } from "../types/reportesApi";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
+import { EstadoVacio } from "../shared/components/ui/EstadoVacio";
 
 interface CitasPorDiaGrafica {
   fecha: string;
@@ -120,24 +122,15 @@ export function PaginaReportes() {
       </header>
 
       {error && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4"
-        >
-          <p className="font-medium text-red-700">
-            No se pudieron cargar los reportes.
-          </p>
-
-          <p className="mt-1 text-sm text-red-600">{error}</p>
-
-          <button
-            type="button"
-            onClick={() => setIntento((actual) => actual + 1)}
-            className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-          >
-            Reintentar
-          </button>
-        </div>
+        <AlertaBanner
+          tipo="error"
+          titulo="No se pudieron cargar los reportes"
+          mensaje={error}
+          accion={{
+            label: "Reintentar",
+            onClick: () => setIntento((actual) => actual + 1),
+          }}
+        />
       )}
 
       {cargando && !error ? (
@@ -164,8 +157,11 @@ export function PaginaReportes() {
             </p>
 
             {citasEspecialidad.length === 0 ? (
-              <div className="flex h-72 items-center justify-center rounded-lg bg-slate-50 p-6 text-center text-slate-500">
-                No hay datos de citas por especialidad.
+              <div className="flex h-72 items-center justify-center rounded-lg bg-slate-50 p-6">
+                <EstadoVacio
+                  titulo="No hay datos disponibles"
+                  descripcion="No hay datos de citas por especialidad."
+                />
               </div>
             ) : (
               <div className="h-72 w-full">
@@ -207,9 +203,11 @@ export function PaginaReportes() {
             </p>
 
             {sinCitasDiarias ? (
-              <div className="flex h-72 items-center justify-center rounded-lg bg-slate-50 p-6 text-center text-slate-500">
-                No se registraron citas no canceladas durante los últimos siete
-                días.
+              <div className="flex h-72 items-center justify-center rounded-lg bg-slate-50 p-6">
+                <EstadoVacio
+                  titulo="Sin actividad reciente"
+                  descripcion="No se registraron citas no canceladas durante los últimos siete días."
+                />
               </div>
             ) : (
               <div className="h-72 w-full">
