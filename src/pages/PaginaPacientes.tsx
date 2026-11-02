@@ -10,7 +10,6 @@
 
 import { PacienteRow } from "../components/pacientes/PacienteRow";
 import { PacienteCard } from "../components/pacientes/PacienteCard";
-import { useState, useEffect } from "react";
 import { BuscadorPacientes } from "../components/pacientes/BuscadorPacientes";
 import { ResumenPacientes } from "../components/pacientes/ResumenPacientes";
 import type { Paciente, EstadoPaciente } from "../types/paciente";
@@ -23,11 +22,12 @@ import toast from "react-hot-toast";
 import { extraerMensajeError } from "../lib/errorHandler";
 import { ModalConfirmacion } from "../components/ui/ModalConfirmacion";
 import { useFiltrosStore } from "../stores/filtrosStore";
-import { usePacientesStore } from "../stores/pacientesStore";
 import { useDebounce } from "../hooks/useDebounce";
 import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
 import { EstadoVacio } from "../shared/components/ui/EstadoVacio";
 import { SkeletonPacienteRow } from "../shared/components/skeletons/SkeletonPacienteRow";
+import { useState } from "react";
+import { usePacientes } from "../features/pacientes/hooks/usePacientes";
 
 export function PaginaPacientes() {
   const [guardando, setGuardando] = useState(false);
@@ -35,14 +35,15 @@ export function PaginaPacientes() {
     null,
   );
   const [pacienteAEditar, setPacienteAEditar] = useState<Paciente | null>(null);
-  const pacientes = usePacientesStore((s) => s.pacientes);
-  const cargando = usePacientesStore((s) => s.cargando);
-  const error = usePacientesStore((s) => s.error);
-
-  const cargarPacientes = usePacientesStore((s) => s.cargar);
-  const crearPaciente = usePacientesStore((s) => s.crear);
-  const desactivarPaciente = usePacientesStore((s) => s.eliminar);
-  const actualizarPaciente = usePacientesStore((s) => s.actualizar);
+  const {
+    pacientes,
+    cargando,
+    error,
+    cargar: cargarPacientes,
+    crear: crearPaciente,
+    actualizar: actualizarPaciente,
+    eliminar: desactivarPaciente,
+  } = usePacientes();
 
   const [eliminando, setEliminando] = useState(false);
 
@@ -125,10 +126,6 @@ export function PaginaPacientes() {
       setEliminando(false);
     }
   };
-
-  useEffect(() => {
-    void cargarPacientes();
-  }, [cargarPacientes]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
