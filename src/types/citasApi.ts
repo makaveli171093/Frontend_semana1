@@ -10,3 +10,16 @@ export interface CitaApi {
   scheduledAt: string;
   reason?: string | null;
 }
+
+export interface CitaHistorialApi {
+  id: number;
+  doctorId: number;
+  scheduledAt: string;
+  reason: string | null;
+  status: EstadoCita;
+  patient: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
+}

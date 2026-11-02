@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+﻿import { Route, Routes } from "react-router-dom";
 
 import { Layout } from "./layouts/Layout";
 import PaginaDashboard from "./pages/PaginaDashboard";
@@ -13,6 +13,7 @@ import { RutaProtegida } from "./components/RutaProtegida";
 import { RutaSinMedico } from "./components/RutaSinMedico";
 import { PaginaSinAcceso } from "./pages/PaginaSinAcceso";
 import { PaginaPerfil } from "./pages/PaginaPerfil";
+import { PaginaHistorialCitas } from "./pages/PaginaHistorialCitas";
 
 function App() {
   return (
@@ -38,6 +39,11 @@ function App() {
           <Route path="/sin-acceso" element={<PaginaSinAcceso />} />
 
           <Route path="*" element={<PaginaNotFound />} />
+          <Route
+            element={<RutaProtegida rolesPermitidos={["MEDICO", "GERENCIA"]} />}
+          >
+            <Route path="/historial" element={<PaginaHistorialCitas />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
