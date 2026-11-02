@@ -4,6 +4,8 @@ import StatusBadge from "../components/StatusBadge";
 import type { Metrica } from "../types";
 import { Link } from "react-router-dom";
 import { useDashboardStore } from "../stores/dashboardStore";
+import { SkeletonMetricCard } from "../shared/components/skeletons/SkeletonMetricCard";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
 
 function PaginaDashboard() {
   const [pacientes, setPacientes] = useState<number>(128);
@@ -82,6 +84,17 @@ function PaginaDashboard() {
 
           <StatusBadge activo={!mantenimiento} />
         </div>
+        {error && (
+          <AlertaBanner
+            tipo="error"
+            titulo="No se pudo cargar el Dashboard"
+            mensaje={error}
+            accion={{
+              label: "Reintentar",
+              onClick: () => void cargarDashboard(),
+            }}
+          />
+        )}
         <Link
           to="/pacientes"
           className="inline-block rounded-lg bg-cyan-800 px-5 py-3 text-sm font-semibold text-white hover:bg-cyan-900"
@@ -130,10 +143,14 @@ function PaginaDashboard() {
         </div>
 
         {/* Listado de métricas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {metricas.map((metrica) => (
-            <MetricCard key={metrica.id} metrica={metrica} />
-          ))}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {cargando
+            ? Array.from({ length: 4 }, (_, index) => (
+                <SkeletonMetricCard key={index} />
+              ))
+            : metricas.map((metrica) => (
+                <MetricCard key={metrica.id} metrica={metrica} />
+              ))}
         </div>
 
         {/* Controles de pacientes */}

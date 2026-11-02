@@ -3,15 +3,11 @@ import { Camera, Save, UserRound } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
+import { Spinner } from "../shared/components/ui/Spinner";
 
-import {
-  perfilSchema,
-  type PerfilFormData,
-} from "../schemas/perfilSchema";
-import {
-  actualizarPerfil,
-  obtenerPerfil,
-} from "../services/perfil";
+import { perfilSchema, type PerfilFormData } from "../schemas/perfilSchema";
+import { actualizarPerfil, obtenerPerfil } from "../services/perfil";
 import { useAuthStore } from "../stores/authStore";
 
 const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"];
@@ -21,9 +17,7 @@ const claseInput =
   "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-cyan-700 focus:ring-4 focus:ring-cyan-100 disabled:bg-slate-100";
 
 export function PaginaPerfil() {
-  const actualizarUsuario = useAuthStore(
-    (state) => state.actualizarUsuario,
-  );
+  const actualizarUsuario = useAuthStore((state) => state.actualizarUsuario);
 
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -31,9 +25,7 @@ export function PaginaPerfil() {
   const [errorFoto, setErrorFoto] = useState("");
   const [fotoGuardada, setFotoGuardada] = useState<string | null>(null);
   const [fotoTemporal, setFotoTemporal] = useState<string | null>(null);
-  const [fotoSeleccionada, setFotoSeleccionada] = useState<File | null>(
-    null,
-  );
+  const [fotoSeleccionada, setFotoSeleccionada] = useState<File | null>(null);
 
   const {
     register,
@@ -148,7 +140,7 @@ export function PaginaPerfil() {
       const fotoFinal =
         typeof actualizado.foto === "undefined"
           ? fotoGuardada
-          : actualizado.foto ?? null;
+          : (actualizado.foto ?? null);
 
       reset({ nombre, email, telefono });
       setFotoGuardada(fotoFinal);
@@ -173,6 +165,9 @@ export function PaginaPerfil() {
       setGuardando(false);
     }
   };
+  if (cargandoPerfil) {
+    return <Spinner fullscreen />;
+  }
 
   return (
     <main className="p-4 sm:p-6 lg:p-8">
@@ -190,12 +185,11 @@ export function PaginaPerfil() {
         </div>
 
         {errorCarga && (
-          <div
-            role="alert"
-            className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-base text-rose-800"
-          >
-            {errorCarga}
-          </div>
+          <AlertaBanner
+            tipo="error"
+            titulo="Error al cargar el perfil"
+            mensaje={errorCarga}
+          />
         )}
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -263,12 +257,6 @@ export function PaginaPerfil() {
                   Mantén tu información actualizada.
                 </p>
               </div>
-
-              {cargandoPerfil && (
-                <p className="mb-4 text-base text-slate-500" role="status">
-                  Cargando información del perfil…
-                </p>
-              )}
 
               <form
                 noValidate

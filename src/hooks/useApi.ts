@@ -9,47 +9,58 @@ interface UseApiResult<T> {
   refetch: () => void;
 }
 
+interface ResultadoApi<T> {
+  clave: string;
+  data: T;
+  error: string | null;
+}
+
 export function useApi<T>(endpoint: string | null): UseApiResult<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(Boolean(endpoint));
-  const [error, setError] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<ResultadoApi<T> | null>(null);
   const [reload, setReload] = useState(0);
 
   const refetch = useCallback(() => {
     setReload((value) => value + 1);
   }, []);
 
+  const claveConsulta = endpoint ? JSON.stringify([endpoint, reload]) : null;
+
   useEffect(() => {
-    if (!endpoint) {
-      setData(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
+    if (!endpoint || !claveConsulta) return;
 
     const controller = new AbortController();
-
-    setLoading(true);
-    setError(null);
 
     api
       .get<T>(endpoint, { signal: controller.signal })
       .then((response) => {
-        setData(response.data);
+        if (!controller.signal.aborted) {
+          setResultado({
+            clave: claveConsulta,
+            data: response.data,
+            error: null,
+          });
+        }
       })
       .catch((err: unknown) => {
         if (!controller.signal.aborted) {
-          setError(extraerMensajeError(err));
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
+          setResultado({
+            clave: claveConsulta,
+            data: null as T,
+            error: extraerMensajeError(err),
+          });
         }
       });
 
     return () => controller.abort();
-  }, [endpoint, reload]);
+  }, [endpoint, claveConsulta]);
 
-  return { data, loading, error, refetch };
+  const resultadoActual =
+    claveConsulta && resultado?.clave === claveConsulta ? resultado : null;
+
+  return {
+    data: endpoint ? (resultadoActual?.data ?? null) : null,
+    loading: Boolean(endpoint) && !resultadoActual,
+    error: endpoint ? (resultadoActual?.error ?? null) : null,
+    refetch,
+  };
 }

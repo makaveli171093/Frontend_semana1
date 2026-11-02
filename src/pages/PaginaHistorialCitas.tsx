@@ -10,6 +10,9 @@ import { extraerMensajeError } from "../lib/errorHandler";
 import type { RespuestaPaginada } from "../types/api";
 import type { CitaHistorialApi, EstadoCita } from "../types/citasApi";
 import type { MedicoApi } from "../types/medicosApi";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
+import { EstadoVacio } from "../shared/components/ui/EstadoVacio";
+import { SkeletonCitaRow } from "../shared/components/skeletons/SkeletonCitaRow";
 
 const ESTADOS = ["Todos", "Programada", "Completada", "Cancelada"] as const;
 
@@ -60,6 +63,7 @@ function formatearFecha(fecha: string): string {
 }
 
 export function PaginaHistorialCitas() {
+  const [intento, setIntento] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const usuario = useAuthStore((state) => state.usuario);
@@ -79,19 +83,38 @@ export function PaginaHistorialCitas() {
 
   // Médicos
   const [medicos, setMedicos] = useState<MedicoApi[]>([]);
-  const [medicosCargando, setMedicosCargando] = useState(false);
+  const [medicosListos, setMedicosListos] = useState(false);
   const [errorMedicos, setErrorMedicos] = useState<string | null>(null);
+  const [intentoMedicos, setIntentoMedicos] = useState(0);
 
   // Historial
-  const [historial, setHistorial] =
-    useState<RespuestaPaginada<CitaHistorialApi> | null>(null);
+  const [resultadoHistorial, setResultadoHistorial] = useState<{
+    clave: string;
+    datos: RespuestaPaginada<CitaHistorialApi>;
+  } | null>(null);
 
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorSolicitud, setErrorSolicitud] = useState<{
+    clave: string;
+    mensaje: string;
+  } | null>(null);
 
   const medicoSeleccionado = medicos.find((medico) => medico.id === medicoId);
 
   const requiereSeleccion = esGerencia && !medicoIdValido;
+
+  const medicosCargando = esGerencia && !medicosListos && !errorMedicos;
+
+  const claveConsulta = `${esGerencia ? medicoId : "mi-historial"}-${pagina}-${estado}-${intento}`;
+
+  const historial =
+    resultadoHistorial?.clave === claveConsulta
+      ? resultadoHistorial.datos
+      : null;
+
+  const error =
+    errorSolicitud?.clave === claveConsulta ? errorSolicitud.mensaje : null;
+
+  const cargando = !requiereSeleccion && !historial && !error;
 
   // Gerencia: cargar médicos disponibles
   useEffect(() => {
@@ -99,12 +122,14 @@ export function PaginaHistorialCitas() {
 
     const controller = new AbortController();
 
-    setMedicosCargando(true);
-    setErrorMedicos(null);
-
     void medicosService
       .listarTodos(controller.signal)
-      .then(setMedicos)
+      .then((resultado) => {
+        if (!controller.signal.aborted) {
+          setMedicos(resultado);
+          setErrorMedicos(null);
+        }
+      })
       .catch((err: unknown) => {
         if (!controller.signal.aborted) {
           setErrorMedicos(extraerMensajeError(err));
@@ -112,26 +137,20 @@ export function PaginaHistorialCitas() {
       })
       .finally(() => {
         if (!controller.signal.aborted) {
-          setMedicosCargando(false);
+          setMedicosListos(true);
         }
       });
 
     return () => controller.abort();
-  }, [esGerencia]);
+  }, [esGerencia, intentoMedicos]);
 
   // Cargar historial según rol, médico, página y estado
   useEffect(() => {
     const controller = new AbortController();
 
-    setHistorial(null);
-    setError(null);
-
     if (esGerencia && !medicoIdValido) {
-      setCargando(false);
       return () => controller.abort();
     }
-
-    setCargando(true);
 
     const filtros = {
       pagina,
@@ -147,22 +166,31 @@ export function PaginaHistorialCitas() {
     void solicitud
       .then((resultado) => {
         if (!controller.signal.aborted) {
-          setHistorial(resultado);
+          setResultadoHistorial({
+            clave: claveConsulta,
+            datos: resultado,
+          });
         }
       })
       .catch((err: unknown) => {
         if (!controller.signal.aborted) {
-          setError(extraerMensajeError(err));
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setCargando(false);
+          setErrorSolicitud({
+            clave: claveConsulta,
+            mensaje: extraerMensajeError(err),
+          });
         }
       });
 
     return () => controller.abort();
-  }, [pagina, estado, esGerencia, medicoId, medicoIdValido]);
+  }, [
+    pagina,
+    estado,
+    esGerencia,
+    medicoId,
+    medicoIdValido,
+    intento,
+    claveConsulta,
+  ]);
 
   // Evitar permanecer en una página que ya no existe
   useEffect(() => {
@@ -276,9 +304,21 @@ export function PaginaHistorialCitas() {
             </select>
 
             {errorMedicos && (
-              <p role="alert" className="mt-2 text-sm text-red-600">
-                {errorMedicos}
-              </p>
+              <div className="mt-4">
+                <AlertaBanner
+                  tipo="error"
+                  titulo="No se pudieron cargar los médicos"
+                  mensaje={errorMedicos}
+                  accion={{
+                    label: "Reintentar",
+                    onClick: () => {
+                      setErrorMedicos(null);
+                      setMedicosListos(false);
+                      setIntentoMedicos((actual) => actual + 1);
+                    },
+                  }}
+                />
+              </div>
             )}
           </section>
         )}
@@ -319,19 +359,22 @@ export function PaginaHistorialCitas() {
               Selecciona un médico para consultar su historial.
             </p>
           </div>
-        ) : error ? (
-          <div
-            role="alert"
-            className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700"
-          >
-            No se pudo cargar el historial: {error}
-          </div>
+        ) : error && !cargando ? (
+          <AlertaBanner
+            tipo="error"
+            titulo="No se pudo cargar el historial"
+            mensaje={error}
+            accion={{
+              label: "Reintentar",
+              onClick: () => setIntento((actual) => actual + 1),
+            }}
+          />
         ) : (
           <>
             {/* Tabla */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="overflow-x-auto" aria-busy={cargando}>
-                <table className="w-full min-w-[760px] text-left text-sm">
+                <table className="w-full min-w-190 text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
                       <th className="px-5 py-4">Paciente</th>
@@ -344,30 +387,11 @@ export function PaginaHistorialCitas() {
                   <tbody className="divide-y divide-slate-100">
                     {cargando ? (
                       Array.from({ length: 10 }, (_, index) => (
-                        <tr
-                          key={`skeleton-${index}`}
-                          className="h-[76px] animate-pulse"
-                        >
-                          <td className="px-5">
-                            <div className="h-4 w-40 rounded bg-slate-200" />
-                          </td>
-                          <td className="px-5">
-                            <div className="h-4 w-32 rounded bg-slate-200" />
-                          </td>
-                          <td className="px-5">
-                            <div className="h-4 w-44 rounded bg-slate-200" />
-                          </td>
-                          <td className="px-5">
-                            <div className="h-6 w-24 rounded-full bg-slate-200" />
-                          </td>
-                        </tr>
+                        <SkeletonCitaRow key={`skeleton-${index}`} />
                       ))
                     ) : historial && historial.data.length > 0 ? (
                       historial.data.map((cita) => (
-                        <tr
-                          key={cita.id}
-                          className="h-[76px] hover:bg-slate-50"
-                        >
+                        <tr key={cita.id} className="h-19 hover:bg-slate-50">
                           <td className="px-5 font-medium text-slate-800">
                             {cita.patient.firstName} {cita.patient.lastName}
                           </td>
@@ -390,12 +414,12 @@ export function PaginaHistorialCitas() {
                         </tr>
                       ))
                     ) : (
-                      <tr className="h-[76px]">
-                        <td
-                          colSpan={4}
-                          className="px-5 py-8 text-center text-slate-500"
-                        >
-                          No se encontraron citas con este filtro.
+                      <tr>
+                        <td colSpan={4} className="px-5 py-6">
+                          <EstadoVacio
+                            titulo="No hay citas registradas"
+                            descripcion="No se encontraron citas para el médico y estado seleccionados."
+                          />
                         </td>
                       </tr>
                     )}

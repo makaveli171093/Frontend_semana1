@@ -25,6 +25,9 @@ import { ModalConfirmacion } from "../components/ui/ModalConfirmacion";
 import { useFiltrosStore } from "../stores/filtrosStore";
 import { usePacientesStore } from "../stores/pacientesStore";
 import { useDebounce } from "../hooks/useDebounce";
+import { AlertaBanner } from "../shared/components/ui/AlertaBanner";
+import { EstadoVacio } from "../shared/components/ui/EstadoVacio";
+import { SkeletonPacienteRow } from "../shared/components/skeletons/SkeletonPacienteRow";
 
 export function PaginaPacientes() {
   const [guardando, setGuardando] = useState(false);
@@ -129,12 +132,14 @@ export function PaginaPacientes() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
-      <FormularioPaciente
-        onAgregar={guardarPaciente}
-        guardando={guardando}
-        pacienteInicial={pacienteAEditar}
-        onCancelarEdicion={() => setPacienteAEditar(null)}
-      />
+      <div id="formulario-paciente">
+        <FormularioPaciente
+          onAgregar={guardarPaciente}
+          guardando={guardando}
+          pacienteInicial={pacienteAEditar}
+          onCancelarEdicion={() => setPacienteAEditar(null)}
+        />
+      </div>
 
       <ResumenPacientes pacientes={pacientes} />
       <div className="mx-auto max-w-6xl">
@@ -162,25 +167,18 @@ export function PaginaPacientes() {
         )}
 
         {error && (
-          <div
-            role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 p-6 text-center"
-          >
-            <p className="mb-4 text-red-700">
-              No se pudieron obtener los pacientes.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => void cargarPacientes()}
-              className="rounded-lg bg-red-700 px-5 py-2 text-white hover:bg-red-800"
-            >
-              Reintentar
-            </button>
-          </div>
+          <AlertaBanner
+            tipo="error"
+            titulo="No se pudieron obtener los pacientes"
+            mensaje={error}
+            accion={{
+              label: "Reintentar",
+              onClick: () => void cargarPacientes(),
+            }}
+          />
         )}
 
-        {!cargando && !error && (
+        {!error && (cargando || pacientesFiltrados.length > 0) && (
           <>
             {/* Controles de búsqueda y filtros */}
             {/* Tabla de pacientes */}
@@ -228,6 +226,38 @@ export function PaginaPacientes() {
           </>
         )}
 
+        {!cargando && !error && pacientesFiltrados.length === 0 && (
+          <EstadoVacio
+            titulo={
+              pacientes.length === 0
+                ? "No hay pacientes registrados"
+                : "No se encontraron pacientes"
+            }
+            descripcion={
+              pacientes.length === 0
+                ? "Registra el primer paciente para comenzar."
+                : "Prueba cambiando los filtros de búsqueda."
+            }
+            accion={
+              pacientes.length === 0
+                ? {
+                    label: "Agregar paciente",
+                    onClick: () =>
+                      document
+                        .getElementById("formulario-paciente")
+                        ?.scrollIntoView({ behavior: "smooth" }),
+                  }
+                : {
+                    label: "Limpiar filtros",
+                    onClick: () => {
+                      setBusqueda("");
+                      setEstadoFiltro("Todos");
+                    },
+                  }
+            }
+          />
+        )}
+
         {/* Vista de escritorio */}
         <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
           <table className="w-full text-left">
@@ -243,8 +273,34 @@ export function PaginaPacientes() {
             </thead>
 
             <tbody>
-              {pacientesFiltrados.map((paciente) => (
-                <PacienteRow
+              {cargando
+                ? Array.from({ length: 10 }, (_, index) => (
+                    <SkeletonPacienteRow key={`skeleton-${index}`} />
+                  ))
+                : pacientesFiltrados.map((paciente) => (
+                    <PacienteRow
+                      key={paciente.id}
+                      paciente={paciente}
+                      onCambiarEstado={cambiarEstado}
+                      onEliminar={eliminarPaciente}
+                      onEditar={setPacienteAEditar}
+                    />
+                  ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Vista móvil */}
+        <div className="flex flex-col gap-4 md:hidden">
+          {cargando
+            ? Array.from({ length: 10 }, (_, index) => (
+                <SkeletonPacienteRow
+                  key={`skeleton-mobile-${index}`}
+                  vista="tarjeta"
+                />
+              ))
+            : pacientesFiltrados.map((paciente) => (
+                <PacienteCard
                   key={paciente.id}
                   paciente={paciente}
                   onCambiarEstado={cambiarEstado}
@@ -252,21 +308,6 @@ export function PaginaPacientes() {
                   onEditar={setPacienteAEditar}
                 />
               ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Vista móvil */}
-        <div className="flex flex-col gap-4 md:hidden">
-          {pacientesFiltrados.map((paciente) => (
-            <PacienteCard
-              key={paciente.id}
-              paciente={paciente}
-              onCambiarEstado={cambiarEstado}
-              onEliminar={eliminarPaciente}
-              onEditar={setPacienteAEditar}
-            />
-          ))}
         </div>
       </div>
 

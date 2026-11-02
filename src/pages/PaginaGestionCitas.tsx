@@ -5,8 +5,13 @@ import { useCitasStore } from "../stores/citasStore";
 import type { NuevoEstadoCita } from "../services/citas";
 import { extraerMensajeError } from "../lib/errorHandler";
 
+import { Spinner } from "../shared/components/ui/Spinner";
+import { ModalConfirmacion } from "../shared/components/ui/ModalConfirmacion";
+
 export function PaginaGestionCitas() {
   const [id, setId] = useState("");
+  const [modalCancelar, setModalCancelar] = useState(false);
+
   const cita = useCitasStore((s) => s.citaSeleccionada);
   const buscando = useCitasStore((s) => s.cargando);
   const actualizando = useCitasStore((s) => s.actualizando);
@@ -29,14 +34,26 @@ export function PaginaGestionCitas() {
     }
   };
 
-  const cambiarEstado = async (nuevoEstado: NuevoEstadoCita) => {
-    if (!cita || actualizando || buscando) return;
+  const cambiarEstado = async (
+    nuevoEstado: NuevoEstadoCita,
+  ): Promise<boolean> => {
+    if (!cita || actualizando || buscando) return false;
 
     try {
       await actualizarEstado(cita.id, nuevoEstado);
       toast.success("Estado actualizado correctamente");
+      return true;
     } catch (err: unknown) {
       toast.error(`Cambio revertido: ${extraerMensajeError(err)}`);
+      return false;
+    }
+  };
+
+  const confirmarCancelacion = async () => {
+    const actualizado = await cambiarEstado("CANCELADA");
+
+    if (actualizado) {
+      setModalCancelar(false);
     }
   };
 
@@ -68,9 +85,16 @@ export function PaginaGestionCitas() {
               type="button"
               disabled={buscando || actualizando}
               onClick={() => void buscarCita()}
-              className="rounded-lg bg-cyan-800 px-5 py-3 text-white disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-800 px-5 py-3 text-white disabled:opacity-50"
             >
-              {buscando ? "Buscando..." : "Consultar"}
+              {buscando ? (
+                <>
+                  <Spinner />
+                  Consultando...
+                </>
+              ) : (
+                "Consultar"
+              )}
             </button>
           </div>
         </section>
@@ -106,7 +130,7 @@ export function PaginaGestionCitas() {
                 <button
                   type="button"
                   disabled={actualizando}
-                  onClick={() => void cambiarEstado("CANCELADA")}
+                  onClick={() => setModalCancelar(true)}
                   className="rounded-lg bg-red-700 px-5 py-3 text-white disabled:opacity-50"
                 >
                   Cancelar cita
@@ -122,6 +146,17 @@ export function PaginaGestionCitas() {
           </section>
         )}
       </div>
+
+      <ModalConfirmacion
+        abierto={modalCancelar}
+        titulo="Cancelar cita"
+        mensaje={`¿Estás seguro de que deseas cancelar la cita #${cita?.id}? Esta acción cambiará su estado a CANCELADA.`}
+        procesando={actualizando}
+        onConfirmar={() => void confirmarCancelacion()}
+        onCancelar={() => setModalCancelar(false)}
+        textoConfirmar="Sí, cancelar cita"
+        textoProcesando="Cancelando..."
+      />
     </main>
   );
 }

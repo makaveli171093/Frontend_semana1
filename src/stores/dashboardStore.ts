@@ -8,6 +8,13 @@ interface EstadisticasCitas {
   completadas: number;
 }
 
+interface RespuestaMedicos {
+  data: unknown[];
+  total: number;
+  pagina: number;
+  totalPaginas: number;
+}
+
 interface DashboardState {
   totalPacientes: number;
   totalMedicos: number;
@@ -36,18 +43,22 @@ export const useDashboardStore = create<DashboardState>()(
         try {
           const [pacientes, medicos, citas] = await Promise.all([
             api.get<unknown[]>("/patients"),
-            api.get<unknown[]>("/doctors"),
+            api.get<RespuestaMedicos>("/doctors"),
             api.get<EstadisticasCitas>("/reports/appointment-stats"),
           ]);
 
-          if (!Array.isArray(pacientes.data) || !Array.isArray(medicos.data)) {
+          if (
+            !Array.isArray(pacientes.data) ||
+            !Array.isArray(medicos.data.data) ||
+            typeof medicos.data.total !== "number"
+          ) {
             throw new Error("Formato de respuesta inválido");
           }
 
           set(
             {
               totalPacientes: pacientes.data.length,
-              totalMedicos: medicos.data.length,
+              totalMedicos: medicos.data.total,
               estadisticasCitas: citas.data,
               cargando: false,
             },
